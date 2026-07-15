@@ -39,10 +39,11 @@ export default function Home() {
 
       <section className="home-hero" aria-labelledby="home-title">
         <div className="hero-copy">
+          <p className="hero-kicker">sweeper · research project</p>
           <h1 id="home-title">
             Where logic meets chance.<span className="pixel-caret" aria-hidden="true" />
           </h1>
-          <p>
+          <p className="hero-lede">
             Sweeper is an explainable Minesweeper agent. It shows the proof behind a move, then uses probability only when the board requires a guess.
           </p>
           <div className="hero-actions">
