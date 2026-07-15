@@ -31,7 +31,8 @@ test("the navigation, demo, and benchmark routes remain available", async () => 
   assert.match(brandMark, /href="\/"/);
   assert.match(brandMark, /brand-word/);
   assert.match(brandMark, /blastPixels/);
-  assert.match(brandMark, /router\.push\("\/"\)/);
+  assert.match(brandMark, /document\.body\.append\(burst\)/);
+  assert.match(brandMark, /onClick=\{explode\}/);
   assert.match(navigation, /Home/);
   assert.match(navigation, /Benchmarks/);
   assert.match(demo, /setSelected/);
