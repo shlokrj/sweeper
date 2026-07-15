@@ -6,6 +6,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Sweeper | Minesweeper research",
   description: "A research interface for Minesweeper agents, board state, and benchmark results.",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
