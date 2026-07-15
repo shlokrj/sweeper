@@ -27,9 +27,11 @@ test("the navigation, demo, and benchmark routes remain available", async () => 
     readFile(new URL("../app/benchmarks/page.tsx", import.meta.url), "utf8"),
   ]);
   assert.match(brandMark, /Trigger a Minesweeper explosion/);
+  assert.match(brandMark, /className="brand"/);
   assert.match(navigation, /Home/);
   assert.match(navigation, /Benchmarks/);
   assert.match(demo, /setSelected/);
+  assert.match(demo, /is-scanline/);
   assert.match(benchmarks, /90\.6%/);
   assert.match(benchmarks, /seeds from 20000 through 20499/);
 });
