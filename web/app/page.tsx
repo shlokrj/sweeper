@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { FlagMark } from "./components/flag-mark";
 import { SiteNav } from "./components/site-nav";
-import { ditherMask, pixelDust } from "./components/pixel-texture";
+import { ditherMask } from "./components/pixel-texture";
 
 type HeroCell = "covered" | "clear" | "flag" | "one" | "two" | "three";
 
@@ -27,9 +27,45 @@ const labelForCell: Record<HeroCell, string> = {
   three: "3",
 };
 
+type DebrisParticle = {
+  color: string;
+  delay: number;
+  driftX: number;
+  driftY: number;
+  opacity: number;
+  size: number;
+  x: number;
+  y: number;
+};
+
+const boardDebris: DebrisParticle[] = (() => {
+  const colors = ["#dd8582", "#84ad83", "#84b3cf", "#cbbba5"];
+  const sizes = [3, 5, 6, 8, 11, 15];
+  let state = 41;
+  const next = () => {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    return state / 4294967296;
+  };
+
+  return Array.from({ length: 112 }, (_, index) => {
+    const y = 3 + next() * 94;
+    const cut = 17 + y * 0.48;
+    const x = cut - 5 - Math.pow(next(), 0.64) * 52;
+    return {
+      color: colors[Math.floor(next() * colors.length)],
+      delay: 90 + index * 9 + Math.floor(next() * 130),
+      driftX: -8 - Math.floor(next() * 34),
+      driftY: -16 + Math.floor(next() * 32),
+      opacity: 0.3 + next() * 0.6,
+      size: sizes[Math.floor(next() * sizes.length)],
+      x,
+      y,
+    };
+  });
+})();
+
 const stageStyle = {
-  "--board-dither": ditherMask(),
-  "--board-dust": pixelDust(),
+  "--board-dither": ditherMask(48, 17),
 } as CSSProperties;
 
 export default function Home() {
@@ -55,19 +91,38 @@ export default function Home() {
         </div>
 
         <div className="hero-board-stage" style={stageStyle} aria-label="Illustrated Minesweeper board">
-          <div className="board-dust" aria-hidden="true" />
-          <div className="hero-board" aria-hidden="true">
-            {heroBoard.flatMap((row, rowIndex) =>
-              row.map((cell, columnIndex) => (
-                <span
-                  className={`hero-cell hero-cell-${cell}`}
-                  key={`${rowIndex}-${columnIndex}`}
-                  style={{ "--cell-delay": `${(rowIndex + columnIndex) * 36}ms` } as CSSProperties}
-                >
-                  {cell === "flag" ? <FlagMark compact /> : labelForCell[cell]}
-                </span>
-              )),
-            )}
+          <div className="hero-board-shell" aria-hidden="true">
+            <div className="board-debris">
+              {boardDebris.map((particle, index) => (
+                <i
+                  className="board-debris-pixel"
+                  key={index}
+                  style={{
+                    "--debris-color": particle.color,
+                    "--debris-delay": `${particle.delay}ms`,
+                    "--debris-drift-x": `${particle.driftX}px`,
+                    "--debris-drift-y": `${particle.driftY}px`,
+                    "--debris-opacity": particle.opacity,
+                    "--debris-size": `${particle.size}px`,
+                    "--debris-x": `${particle.x}%`,
+                    "--debris-y": `${particle.y}%`,
+                  } as CSSProperties}
+                />
+              ))}
+            </div>
+            <div className="hero-board">
+              {heroBoard.flatMap((row, rowIndex) =>
+                row.map((cell, columnIndex) => (
+                  <span
+                    className={`hero-cell hero-cell-${cell}`}
+                    key={`${rowIndex}-${columnIndex}`}
+                    style={{ "--cell-delay": `${160 + (8 - columnIndex) * 42 + rowIndex * 14}ms` } as CSSProperties}
+                  >
+                    {cell === "flag" ? <FlagMark compact /> : labelForCell[cell]}
+                  </span>
+                )),
+              )}
+            </div>
           </div>
         </div>
       </section>
