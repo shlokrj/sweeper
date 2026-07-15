@@ -32,7 +32,7 @@ test("server-renders the Sweeper workspace", async () => {
   assert.match(html, /Inspect the next move\./);
   assert.match(html, /Minesweeper board/);
   assert.match(html, /Recommended move/i);
-  assert.doesNotMatch(html, /Your site is taking shape|react-loading-skeleton/i);
+  assert.doesNotMatch(html, /Codex is working|react-loading-skeleton/i);
 });
 
 test("analysis controls are present in the client page", async () => {
