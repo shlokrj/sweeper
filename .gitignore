@@ -1,0 +1,29 @@
+# local project guidance
+/agent.md
+/skills.md
+/spec.md
+
+# python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# generated research data and artifacts
+data/
+artifacts/
+mlruns/
+wandb/
+
+# local environment files
+.env
+.env.*
+!.env.example
+
+# editor and operating-system files
+.DS_Store
+.idea/
+.vscode/
