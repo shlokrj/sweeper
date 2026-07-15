@@ -14,15 +14,16 @@ test("server-renders the light Minesweeper home page", async () => {
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.match(html, /Where logic meets chance\./);
-  assert.match(html, /try the demo/);
+  assert.match(html, /play a board/);
   assert.match(html, /win rate/);
   assert.doesNotMatch(html, /local build|decision stack|Minesweeper research \/ 2026/i);
 });
 
-test("the navigation, demo, and benchmark routes remain available", async () => {
-  const [brandMark, navigation, demo, benchmarks] = await Promise.all([
+test("the navigation, playable board, demo, and benchmark routes remain available", async () => {
+  const [brandMark, navigation, play, demo, benchmarks] = await Promise.all([
     readFile(new URL("../app/components/brand-mark.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/site-nav.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/play/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/demo/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/benchmarks/page.tsx", import.meta.url), "utf8"),
   ]);
@@ -34,7 +35,12 @@ test("the navigation, demo, and benchmark routes remain available", async () => 
   assert.match(brandMark, /document\.body\.append\(burst\)/);
   assert.match(brandMark, /onClick=\{explode\}/);
   assert.match(navigation, /Home/);
+  assert.match(navigation, /Play/);
   assert.match(navigation, /Benchmarks/);
+  assert.match(play, /onContextMenu/);
+  assert.match(play, /play-explosion/);
+  assert.match(play, /board cleared/);
+  assert.match(play, /mine hit/);
   assert.match(demo, /setSelected/);
   assert.match(demo, /is-scanline/);
   assert.match(benchmarks, /90\.6%/);
