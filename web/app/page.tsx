@@ -81,8 +81,8 @@ export default function Home() {
             <strong>Sweeper</strong> explains each Minesweeper move with a proof. It uses probability only when the board requires a guess.
           </p>
           <div className="hero-actions">
-            <Link className="primary-link" href="/play">play a board <span aria-hidden="true">→</span></Link>
-            <Link className="secondary-link" href="/demo">watch the demo</Link>
+            <Link className="primary-link" href="/demo">play a board <span aria-hidden="true">→</span></Link>
+            <Link className="secondary-link" href="/benchmarks">see benchmarks</Link>
           </div>
           <dl className="hero-stats">
             <div><dt>win rate</dt><dd className="stat-green">90.6%</dd></div>

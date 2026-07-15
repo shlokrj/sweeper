@@ -19,11 +19,11 @@ test("server-renders the light Minesweeper home page", async () => {
   assert.doesNotMatch(html, /local build|decision stack|Minesweeper research \/ 2026/i);
 });
 
-test("the navigation, playable board, demo, and benchmark routes remain available", async () => {
-  const [brandMark, navigation, play, demo, benchmarks] = await Promise.all([
+test("the navigation, playable demo, and benchmark routes remain available", async () => {
+  const [brandMark, navigation, engine, demo, benchmarks] = await Promise.all([
     readFile(new URL("../app/components/brand-mark.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/site-nav.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../app/play/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/minesweeper.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/demo/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/benchmarks/page.tsx", import.meta.url), "utf8"),
   ]);
@@ -35,14 +35,19 @@ test("the navigation, playable board, demo, and benchmark routes remain availabl
   assert.match(brandMark, /document\.body\.append\(burst\)/);
   assert.match(brandMark, /onClick=\{explode\}/);
   assert.match(navigation, /Home/);
-  assert.match(navigation, /Play/);
+  assert.match(navigation, /Demo/);
   assert.match(navigation, /Benchmarks/);
-  assert.match(play, /onContextMenu/);
-  assert.match(play, /play-explosion/);
-  assert.match(play, /board cleared/);
-  assert.match(play, /mine hit/);
-  assert.match(demo, /setSelected/);
+  assert.doesNotMatch(navigation, /href="\/play"/);
+  assert.match(engine, /safeZone/);
+  assert.match(engine, /chordCell/);
+  assert.match(engine, /provenSafe/);
+  assert.match(demo, /revealCell|handleReveal/);
+  assert.match(demo, /onContextMenu/);
+  assert.match(demo, /play-explosion/);
+  assert.match(demo, /board cleared/);
+  assert.match(demo, /mine hit/);
   assert.match(demo, /is-scanline/);
+  assert.match(demo, /play this move/);
   assert.match(benchmarks, /90\.6%/);
   assert.match(benchmarks, /seeds from 20000 through 20499/);
 });
