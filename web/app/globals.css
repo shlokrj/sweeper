@@ -59,6 +59,7 @@ button { font: inherit; }
 .brand:hover .brand-word, .brand:focus-visible .brand-word { color: var(--red-deep); }
 .brand:focus-visible { outline: 2px solid var(--red); outline-offset: 5px; }
 .brand-explosion { position: absolute; top: 50%; left: 50%; width: 0; height: 0; pointer-events: none; }
+.brand-explosion-fixed { position: fixed; z-index: 20; }
 .brand-explosion i { position: absolute; top: 0; left: 0; display: block; width: var(--blast-size); height: var(--blast-size); background: var(--blast-color); animation: mine-explode 460ms steps(5, end) forwards; }
 .site-nav nav { display: flex; align-items: center; gap: clamp(25px, 3.8vw, 60px); }
 .site-nav nav a { position: relative; padding: 7px 0; color: var(--muted); font-size: 0.98rem; transition: color 140ms ease; }

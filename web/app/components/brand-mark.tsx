@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { type CSSProperties, type MouseEvent, useState } from "react";
+import { type MouseEvent } from "react";
 import { FlagMark } from "./flag-mark";
 
 const blastPixels = [
@@ -13,15 +12,28 @@ const blastPixels = [
 ] as const;
 
 export function BrandMark() {
-  const [burst, setBurst] = useState(0);
-  const router = useRouter();
+  function explode(event: MouseEvent<HTMLAnchorElement>) {
+    const icon = event.currentTarget.querySelector<HTMLElement>(".brand-icon");
+    if (!icon) return;
 
-  function goHome(event: MouseEvent<HTMLAnchorElement>) {
-    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    const bounds = icon.getBoundingClientRect();
+    const burst = document.createElement("span");
+    burst.className = "brand-explosion brand-explosion-fixed";
+    burst.setAttribute("aria-hidden", "true");
+    burst.style.left = `${bounds.left + bounds.width / 2}px`;
+    burst.style.top = `${bounds.top + bounds.height / 2}px`;
 
-    event.preventDefault();
-    setBurst((count) => count + 1);
-    window.setTimeout(() => router.push("/"), 460);
+    blastPixels.forEach(([x, y, size, color]) => {
+      const pixel = document.createElement("i");
+      pixel.style.setProperty("--blast-color", color);
+      pixel.style.setProperty("--blast-size", `${size}px`);
+      pixel.style.setProperty("--blast-x", `${x}px`);
+      pixel.style.setProperty("--blast-y", `${y}px`);
+      burst.append(pixel);
+    });
+
+    document.body.append(burst);
+    window.setTimeout(() => burst.remove(), 480);
   }
 
   return (
@@ -29,25 +41,10 @@ export function BrandMark() {
       aria-label="Sweeper home"
       className="brand"
       href="/"
-      onClick={goHome}
+      onClick={explode}
     >
       <span className="brand-icon">
         <FlagMark />
-        {burst > 0 && (
-          <span className="brand-explosion" key={burst} aria-hidden="true">
-            {blastPixels.map(([x, y, size, color], index) => (
-              <i
-                key={index}
-                style={{
-                  "--blast-color": color,
-                  "--blast-size": `${size}px`,
-                  "--blast-x": `${x}px`,
-                  "--blast-y": `${y}px`,
-                } as CSSProperties}
-              />
-            ))}
-          </span>
-        )}
       </span>
       <span className="brand-word">sweeper</span>
     </Link>
