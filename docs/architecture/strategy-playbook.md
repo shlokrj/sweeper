@@ -1,6 +1,6 @@
 # Minesweeper strategy playbook
 
-This document turns human Minesweeper strategy into explicit Sweeper behavior. It is a design reference, not a claim that every technique is already implemented.
+This reference maps human Minesweeper strategy to Sweeper behavior. It distinguishes implemented behavior from planned work.
 
 ## Evidence labels
 
@@ -13,13 +13,13 @@ Every recommendation must state the strength of its evidence:
 | `approximate` | a bounded/sampled calculation estimated probability |
 | `neural` | the CNN estimated probability from visible state |
 
-Only `proven` moves may be described as safe. A learned-hybrid agent routes from symbolic proof, to exact enumeration, to a neural estimate when enumeration is outside its configured complexity limit.
+Only `proven` moves may be called safe. The learned-hybrid agent uses symbolic proof first, then exact enumeration, then a neural estimate when enumeration reaches its complexity limit.
 
 ## Patterns are constraint subtraction
 
-The useful way to encode named patterns is not as a long list of image templates. Each revealed clue creates a constraint: a set of covered neighbouring cells and the number of mines among them. If constraint `A` is a subset of constraint `B`, then the non-overlapping cells `B − A` contain `mines(B) − mines(A)` mines.
+Each revealed clue creates a constraint: a set of covered neighbours and a mine count. If constraint `A` is a subset of constraint `B`, the cells in `B − A` contain `mines(B) − mines(A)` mines.
 
-That one rule explains the common visual patterns:
+This rule explains the common visual patterns:
 
 | familiar pattern | constraint interpretation | resulting action |
 | --- | --- | --- |
@@ -30,55 +30,55 @@ That one rule explains the common visual patterns:
 | `1-2-1` / `1-2-2-1` | repeated `1-2-X` and subtraction | forced mines at the ends and safe middle cells |
 | irregular, T, or corner shapes | subset relation does not need a straight line | apply the same subtraction rule until a fixed point |
 
-Sweeper’s `SymbolicSolver` already implements direct and subset deduction. New pattern examples should be added as solver tests with a proof object, rather than hard-coded special cases. The goal is that a human-recognizable pattern and an irregular equivalent receive the same explanation.
+`SymbolicSolver` implements direct and subset deduction. Add new pattern examples as solver tests with proof objects, not as hard-coded templates. A named pattern and an irregular equivalent should produce the same proof.
 
 ## First-click policy
 
-First-click advice depends on the game contract, so Sweeper records it explicitly.
+First-click policy depends on the game contract and must be recorded.
 
-- The current engine uses `safe_first_click=True` by default: the chosen first cell cannot be a mine, but its neighbours are not promised to be clear.
+- The current engine uses `safe_first_click=True` by default. The chosen cell cannot be a mine, but adjacent cells may contain mines.
 - The board places mines after the first reveal, so the first action is reproducible for a given seed and selected cell.
-- Some clients protect a larger zero-opening; others only protect the clicked cell. Comparisons across those variants are not valid unless the protection policy is reported.
-- For learned experiments, avoid quietly treating a centre click, corner click, or large-opening guarantee as universal. Record the selected first action and train/evaluate under the same policy.
+- Some clients protect a zero region. Others protect only the clicked cell. Do not compare these variants without reporting the protection policy.
+- Record the first action for every learned experiment. Train and evaluate under the same first-click policy.
 
-The current labeled-data generator starts from the centre of each beginner board. A future first-click experiment should compare centre, corner, and seeded-random policies under both safe-cell and zero-region guarantees, with separate seed ranges.
+The labeled-data generator starts from the centre of each beginner board. A future experiment should compare centre, corner, and seeded-random policies under safe-cell and zero-region guarantees on separate seed ranges.
 
 ## Guessing is risk management
 
-When no proof remains, a move is a decision under uncertainty—not a hidden proof.
+When no proof remains, the move is a risk decision.
 
 1. Exhaust direct, subset, and chained symbolic deductions across the whole frontier.
-2. Use exact component enumeration when it is tractable; choose the valid cell with the lowest exact mine probability.
+2. Use exact component enumeration when it fits the configured limit. Choose the valid cell with the lowest exact mine probability.
 3. Respect the global remaining-mine count, including unconstrained covered cells.
 4. If exact enumeration is bounded, use the neural estimate or an explicitly approximate method and label it accordingly.
-5. Break equal-risk ties by expected information gain only after measuring it; do not assume an opening is more valuable without an experiment.
+5. Use expected information gain for equal-risk ties only after measuring it.
 
-This distinguishes a genuine 50:50 from a position where a distant constraint, the global mine count, or a subset relation still resolves the board. A no-guess board generator is a separate future mode: it must certify a proof-only path rather than merely make a good guess likely.
+This separates a genuine 50:50 from a board still resolved by a distant constraint, the global mine count, or a subset relation. A future no-guess generator must certify a proof-only solution path.
 
 ## Flags and no-flags play
 
-Winning requires revealing every safe cell, not flagging every mine. Flags are useful for human memory and for chord controls, but they are not evidence.
+Winning requires revealing every safe cell. Flags support human memory and chord controls, but they are not evidence.
 
-Sweeper’s current Gym action space is reveal-only, so its agents are intentionally no-flags agents. This avoids letting an agent mistake its own marker for ground truth and matches the product objective of selecting safe reveals. If flag/chord actions are added later:
+The current Gym action space is reveal-only. Agents do not flag cells. This prevents an agent from treating its own marker as ground truth. If flag or chord actions are added:
 
-- require a `proven` mine or an exact probability of `1.0` before an automatic flag;
-- never let a neural estimate trigger a flag automatically;
-- expose the flag’s evidence and allow it to be removed;
-- measure reveal actions, flags, chords, and wall-clock decision time separately.
+- require a `proven` mine or exact probability `1.0` before an automatic flag
+- never allow a neural estimate to trigger an automatic flag
+- record the evidence for every flag and allow it to be removed
+- measure reveal actions, flags, chords, and decision time separately
 
 ## Efficiency has two meanings
 
-Human speedplay efficiency is about mouse actions: skipping unnecessary flags, chording a satisfied clue that opens many cells, prioritizing likely openings, and avoiding needless cursor travel. The reference material uses 3BV as a lower bound on left-click work and discusses click efficiency relative to it.
+Human speedplay efficiency concerns mouse actions. It includes skipping unnecessary flags, chording a satisfied clue that opens many cells, and limiting cursor travel. The reference material uses 3BV as a lower bound on left-click work.
 
 Solver efficiency is different. For Sweeper, record at least:
 
-- win/loss rate on shared seeds;
-- reveal actions and total revealed cells;
-- decision latency per move;
-- solver fallback count and exact-enumeration coverage;
-- future UI actions: flags, chords, pointer distance, and 3BV-normalized click count.
+- win and loss rate on shared seeds
+- reveal actions and total revealed cells
+- decision latency per move
+- solver fallback count and exact-enumeration coverage
+- future UI actions, flags, chords, pointer distance, and 3BV-normalized click count
 
-The environment already clears zero regions recursively, so one reveal action can expose many cells. Chording and UI-path metrics belong in a later interaction layer, not in the current solver benchmark.
+The environment clears zero regions recursively, so one reveal action can expose many cells. Chording and UI-path metrics belong in a later interaction layer.
 
 ## Source reading
 
@@ -90,4 +90,4 @@ This playbook synthesizes the requested human-strategy references:
 - [no flags](https://minesweepergame.com/strategy/no-flags.php)
 - [efficiency](https://minesweepergame.com/strategy/efficiency.php)
 
-The patterns and no-flags/efficiency guidance is reflected in the symbolic-subset, reveal-only, and future chord metrics sections above. The project keeps first-click and guessing claims conditional on the engine’s documented game contract and recorded evaluation settings.
+Patterns, no-flags play, and efficiency map to symbolic subtraction, reveal-only actions, and future chord metrics. First-click and guessing claims remain conditional on the documented game contract and evaluation settings.

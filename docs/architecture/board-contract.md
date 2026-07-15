@@ -10,14 +10,14 @@
 | `-1` | covered |
 | `0..8` | revealed adjacent-mine count |
 
-Ground-truth mines live separately. `hidden_mines` is unavailable until random placement has occurred and is not part of the observation interface used by agents.
+Ground-truth mines are stored separately. `hidden_mines` is unavailable until random placement and never appears in an agent observation.
 
 ## construction and placement
 
 - Coordinates are zero-based `(row, column)` tuples.
 - Boards require positive dimensions and at least one safe cell.
 - A seeded random board with `safe_first_click=True` places mines on its first reveal, excluding that selected cell.
-- Supplying `mine_positions` preserves those coordinates exactly for reproducible scenarios and tests; it does not relocate a first-click mine.
+- Supplying `mine_positions` preserves those coordinates for a reproducible scenario or test. It does not relocate a first-click mine.
 
 ## actions and lifecycle
 

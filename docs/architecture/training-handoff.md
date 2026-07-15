@@ -1,6 +1,6 @@
 # training handoff
 
-The first trainable model is `MineProbabilityCNN`. It predicts one mine-risk logit per cell from the visible board and learns from exact probability labels, not hidden mine locations.
+`MineProbabilityCNN` predicts one mine-risk logit per visible cell. It trains on exact probability labels, not hidden mine locations.
 
 ## overnight run
 
@@ -12,17 +12,17 @@ make generate-data PYTHON=.venv/bin/python DATASET=data/beginner_labels.npz GAME
 make train PYTHON=.venv/bin/python DATASET=data/beginner_labels.npz CHECKPOINT=artifacts/cnn.pt EPOCHS=80 BATCH_SIZE=1024
 ```
 
-The generator uses 9×9 beginner boards with 10 mines by default. It retains only states whose exact probability labels are tractable under the configured component limit. The trainer splits states by whole board seed, so validation games never share a board with training games.
+The generator creates 9×9 beginner boards with 10 mines. It keeps states whose exact labels fit the configured component limit. The trainer splits by board seed, so training and validation states never share a board.
 
 ## symmetry-augmented retrain
 
-The first follow-up experiment trains on a random rotation or reflection of each square training board. It keeps each observation, exact-probability target, and valid-cell mask aligned, while leaving validation states untouched. This adds board-orientation coverage without leaking validation seeds or producing another dataset archive.
+This experiment applies a random rotation or reflection to each square training board. It transforms the observation, exact-probability target, and valid-cell mask together. Validation states remain unchanged. The augmentation adds orientation coverage without generating another dataset archive.
 
 ```bash
 make train PYTHON=.venv/bin/python DATASET=data/beginner_labels.npz CHECKPOINT=artifacts/cnn-augmented.pt EPOCHS=80 BATCH_SIZE=1024 TRAIN_FLAGS=--augment-symmetries
 ```
 
-Use a new checkpoint path so the original CNN remains available as a reproducible baseline.
+Use a new checkpoint path to retain the original CNN as a baseline.
 
 ## outputs and device
 
@@ -31,14 +31,14 @@ Use a new checkpoint path so the original CNN remains available as a reproducibl
 - Training uses Apple Metal (`mps`) when available, then CUDA, then CPU.
 - Each epoch logs training and seed-disjoint validation binary-cross-entropy loss.
 
-The smoke test has already completed a one-epoch, four-game run successfully. The commands above are the first meaningful long-running experiment; do not start them until you are ready to use the machine for training.
+The smoke test completed one epoch on four games. Full runs require the machine for the duration of training.
 
 ## held-out agent comparison
 
-After training, compare the CNN with the random, local heuristic, symbolic, exact, hybrid, and neural-hybrid agents using one shared held-out seed range. The default range starts at `20000`, immediately after the `0` through `19999` training-data boards.
+Compare the CNN with the random, local heuristic, symbolic, exact, hybrid, and neural-hybrid agents on one held-out seed range. The default range starts at `20000`, after the `0` through `19999` training-data boards.
 
 ```bash
 make benchmark PYTHON=.venv/bin/python CHECKPOINT=artifacts/cnn.pt REPORT=artifacts/benchmark.json BENCHMARK_GAMES=500 EVALUATION_SEED_START=20000
 ```
 
-The ignored JSON report retains the configuration, exact seed list, per-game action replay, outcome, and timing for every agent. Neural decisions are reported as learned risk estimates, never as proof that a move is safe.
+The ignored JSON report stores the configuration, seed list, action replay, outcome, and timing for each agent. A neural decision is a learned risk estimate, not proof of safety.

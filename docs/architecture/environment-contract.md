@@ -14,8 +14,8 @@ observation, reward, terminated, truncated, info = env.step(action)
 - `observation` is an `int8` matrix with the board's `-2`, `-1`, and `0..8` visible-cell encoding.
 - `info["action_mask"]` is a flattened boolean array marking revealable cells.
 - Invalid, previously revealed, flagged, or out-of-range actions raise an error instead of silently changing the game.
-- Every new safe cell returns `+1` reward; selecting a mine returns `-1`.
-- A game result sets `terminated=True`; this environment does not impose truncation.
+- Every new safe cell returns `+1` reward. Selecting a mine returns `-1`.
+- A game result sets `terminated=True`. The environment does not impose truncation.
 
 ## reproducibility and replay
 
