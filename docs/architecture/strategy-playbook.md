@@ -32,6 +32,18 @@ This rule explains the common visual patterns:
 
 `SymbolicSolver` implements direct and subset deduction. Add new pattern examples as solver tests with proof objects, not as hard-coded templates. A named pattern and an irregular equivalent should produce the same proof.
 
+## Strategy-aware model inputs
+
+The probability model can receive three feature planes derived from the playbook:
+
+- a mask of cells proved safe by symbolic deduction
+- a mask of cells proved to contain mines
+- a plane containing the remaining-mine density over covered cells
+
+During training, the labeled data set stores the symbolic masks. During inference, `NeuralAgent` recreates them with `SymbolicSolver` from the visible board. The density plane carries the global mine-count information used in late-game risk decisions.
+
+The model never receives hidden mine locations. No-flags and efficiency guidance remain action-policy concerns. The current agents reveal cells only, and a future UI layer will handle flags, chords, and pointer paths.
+
 ## First-click policy
 
 First-click policy depends on the game contract and must be recorded.

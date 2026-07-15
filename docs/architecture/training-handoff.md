@@ -24,6 +24,19 @@ make train PYTHON=.venv/bin/python DATASET=data/beginner_labels.npz CHECKPOINT=a
 
 Use a new checkpoint path to retain the original CNN as a baseline.
 
+## strategy-aware retrain
+
+The strategy-aware model receives symbolic safe and mine masks plus the remaining-mine density. The masks come from visible constraints and encode the pattern and guessing rules in the strategy playbook. They do not expose hidden mines.
+
+Generate labels from varied, reproducible first clicks, then train a separate checkpoint:
+
+```bash
+make generate-data PYTHON=.venv/bin/python DATASET=data/beginner-strategy-labels.npz GAMES=20000 INITIAL_CLICK=seeded_uniform
+make train PYTHON=.venv/bin/python DATASET=data/beginner-strategy-labels.npz CHECKPOINT=artifacts/cnn-strategy.pt EPOCHS=80 BATCH_SIZE=1024 TRAIN_FLAGS='--strategy-features --mine-count 10'
+```
+
+Use the strategy data set for both training and calibration. The first-click policy remains part of the experiment configuration.
+
 ## outputs and device
 
 - Dataset archives are written below ignored `data/`.
@@ -42,3 +55,13 @@ make benchmark PYTHON=.venv/bin/python CHECKPOINT=artifacts/cnn.pt REPORT=artifa
 ```
 
 The ignored JSON report stores the configuration, seed list, action replay, outcome, and timing for each agent. A neural decision is a learned risk estimate, not proof of safety.
+
+## calibration report
+
+Win rate does not measure whether a mine-risk estimate is accurate. Run calibration on seed-disjoint validation states after each training run:
+
+```bash
+make calibrate PYTHON=.venv/bin/python DATASET=data/beginner-strategy-labels.npz CHECKPOINT=artifacts/cnn-strategy.pt CALIBRATION_REPORT=artifacts/calibration-strategy.json
+```
+
+The report records Brier score, mean absolute error, expected calibration error, and per-bin predicted and exact mine probabilities.
