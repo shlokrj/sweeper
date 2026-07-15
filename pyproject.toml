@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sweeper"
+version = "0.1.0"
+description = "Research tools for explainable Minesweeper agents"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+authors = [{ name = "Shlok Jadhav", email = "shlok.jadhav.07@gmail.com" }]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "hypothesis>=6",
+    "pytest>=8",
+    "ruff>=0.8",
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
