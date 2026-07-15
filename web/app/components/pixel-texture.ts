@@ -3,9 +3,8 @@ function svgUrl(svg: string): string {
 }
 
 /**
- * A sporadic erosion mask. The board stays solid on the right and crumbles
- * away along a steep slanted band, with a seeded per-pixel hash deciding
- * which small pixels survive, so the edge looks eroded rather than cut.
+ * A sporadic erosion mask. The board stays solid on the right and breaks
+ * into irregular clusters toward the left, without a single directional edge.
  */
 export function ditherMask(size = 64, seed = 7): string {
   const hash = (x: number, y: number) => {
@@ -13,13 +12,24 @@ export function ditherMask(size = 64, seed = 7): string {
     h = ((h ^ (h >>> 13)) * 1274126177) >>> 0;
     return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
   };
-  const bandStart = 0.06;
-  const bandEnd = 0.5;
+
+  const smooth = (value: number) => value * value * (3 - 2 * value);
+  const mix = (start: number, end: number, amount: number) => start + (end - start) * amount;
+  const noise = (x: number, y: number, scale: number) => {
+    const gridX = Math.floor(x / scale);
+    const gridY = Math.floor(y / scale);
+    const xAmount = smooth((x % scale) / scale);
+    const yAmount = smooth((y % scale) / scale);
+    const top = mix(hash(gridX, gridY), hash(gridX + 1, gridY), xAmount);
+    const bottom = mix(hash(gridX, gridY + 1), hash(gridX + 1, gridY + 1), xAmount);
+    return mix(top, bottom, yAmount);
+  };
+
   const visible = (x: number, y: number) => {
-    const progress = ((x + 0.5 * y) / size - bandStart) / (bandEnd - bandStart);
-    if (progress >= 1) return true;
-    if (progress <= 0) return false;
-    return hash(x, y) < Math.pow(progress, 1.6);
+    const progress = (x + 0.5) / size;
+    const clusters = (noise(x, y, 12) - 0.5) * 0.42 + (noise(x, y, 4) - 0.5) * 0.14;
+    const density = Math.max(0, Math.min(1, (progress - 0.07) / 0.5 + clusters));
+    return hash(x, y) < Math.pow(density, 1.35);
   };
   const rows: string[] = [];
   for (let y = 0; y < size; y += 1) {

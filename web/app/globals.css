@@ -37,7 +37,6 @@ button { font: inherit; }
 @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes cell-in { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: none; } }
-@keyframes caret-blink { 0%, 54% { opacity: 1; } 55%, 100% { opacity: 0; } }
 @keyframes flag-wiggle { 0%, 100% { transform: none; } 50% { transform: translateY(-2px); } }
 @keyframes safe-pulse { 0%, 100% { outline-color: var(--green); } 50% { outline-color: rgba(132, 173, 131, 0.3); } }
 @keyframes bar-fill { from { width: 0; } }
@@ -83,10 +82,10 @@ button { font: inherit; }
 .hero-stats > div:hover dd { transform: translateY(-3px); }
 .stat-green { color: var(--green-deep); }.stat-blue { color: var(--blue-deep); }.stat-red { color: var(--red-deep); }
 
-/* hero board dissolving toward its top left corner into pixel dust */
+/* hero board dissolving into clustered pixel dust */
 .hero-board-stage { position: relative; display: grid; min-height: 520px; place-items: center; overflow: hidden; }
-.board-dust { position: absolute; z-index: 0; top: 2%; left: -4%; width: 74%; height: 78%; background-image: var(--board-dust); background-size: 144px 144px; animation: fade-in 700ms ease backwards 150ms; mask-image: linear-gradient(315deg, black 22%, transparent 74%); -webkit-mask-image: linear-gradient(315deg, black 22%, transparent 74%); }
-.hero-board { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(9, minmax(28px, 1fr)); gap: 2px; width: min(84%, 500px); margin: 4% 0 0 auto; padding: 2px; background: linear-gradient(116deg, rgba(183, 170, 151, 0) 16%, var(--line-dark) 44%); box-shadow: 10px 12px 0 rgba(48, 43, 37, 0.08); mask-image: var(--board-dither); mask-size: 100% 100%; -webkit-mask-image: var(--board-dither); -webkit-mask-size: 100% 100%; }
+.board-dust { position: absolute; z-index: 0; top: 1%; left: -8%; width: 88%; height: 92%; background-image: var(--board-dust); background-size: 144px 144px; opacity: 0.82; animation: fade-in 700ms ease backwards 150ms; mask-image: radial-gradient(ellipse 44% 38% at 78% 24%, black 4%, transparent 78%), radial-gradient(ellipse 47% 42% at 65% 66%, black 3%, transparent 76%), radial-gradient(ellipse 24% 30% at 34% 46%, black 0%, transparent 76%); -webkit-mask-image: radial-gradient(ellipse 44% 38% at 78% 24%, black 4%, transparent 78%), radial-gradient(ellipse 47% 42% at 65% 66%, black 3%, transparent 76%), radial-gradient(ellipse 24% 30% at 34% 46%, black 0%, transparent 76%); }
+.hero-board { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(9, minmax(28px, 1fr)); gap: 2px; width: min(84%, 500px); margin: 4% 0 0 auto; padding: 2px; background: var(--line-dark); box-shadow: 10px 12px 0 rgba(48, 43, 37, 0.08); mask-image: var(--board-dither); mask-size: 100% 100%; -webkit-mask-image: var(--board-dither); -webkit-mask-size: 100% 100%; }
 .hero-cell { display: grid; aspect-ratio: 1; place-items: center; background: var(--tile); color: var(--ink); font-family: var(--font-pixel); font-size: clamp(0.53rem, 1.12vw, 0.86rem); animation: cell-in 260ms steps(3, end) backwards; animation-delay: var(--cell-delay, 0ms); }
 .hero-cell-covered, .hero-cell-flag { background: var(--tile-covered); box-shadow: inset 2px 2px 0 #fffaf0, inset -2px -2px 0 #cbbba5; }
 .hero-cell-one { color: var(--red-deep); }.hero-cell-two { color: var(--green-deep); }.hero-cell-three { color: var(--blue-deep); }
