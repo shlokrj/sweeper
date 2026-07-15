@@ -20,10 +20,10 @@ const board: Cell[][] = [
 ];
 
 const columns = ["A", "B", "C", "D", "E", "F", "G", "H", "I"];
-const details: Record<Agent, { risk: string; method: string; evidence: string }> = {
-  hybrid: { risk: "0.0%", method: "symbolic proof, then ranking", evidence: "E6 is safe under the adjacent 1 and 2 constraints." },
-  symbolic: { risk: "0.0%", method: "constraint propagation", evidence: "E6 is a direct safe-cell deduction." },
-  neural: { risk: "0.8%", method: "CNN probability estimate", evidence: "E6 has the lowest mine probability on this frontier." },
+const details: Record<Agent, { label: string; risk: string; method: string; evidence: string }> = {
+  hybrid: { label: "proven", risk: "0.0%", method: "symbolic proof, then ranking", evidence: "E6 is safe under the adjacent 1 and 2 constraints." },
+  symbolic: { label: "proven", risk: "0.0%", method: "constraint propagation", evidence: "E6 is a direct safe-cell deduction." },
+  neural: { label: "neural", risk: "0.8%", method: "CNN probability estimate", evidence: "E6 has the lowest mine probability on this frontier." },
 };
 
 export default function DemoPage() {
@@ -57,25 +57,31 @@ export default function DemoPage() {
                   role="gridcell"
                   type="button"
                 >
-                  {cell === "flag" ? <FlagMark compact /> : cell === "covered" ? "" : cell}
+                  {cell === "flag" ? <FlagMark compact /> : cell === "covered" || cell === 0 ? "" : cell}
                 </button>
               );
             }))}
           </div>
-          <div className="demo-board-key"><span><i className="key-green" /> safe</span><span><i className="key-red" /> risk</span><span>selected {selected}</span></div>
+          <div className="demo-board-key">
+            <span><i className="key-green" /> recommended safe</span>
+            <span><i className="key-red" /> flagged mine</span>
+            <span><i className="key-yellow" /> selected {selected}</span>
+          </div>
         </div>
 
         <aside className="demo-decision">
-          <p className="decision-label">next click</p>
+          <p className="decision-label">next move</p>
           <div className="decision-coordinate">E6</div>
-          <p className="decision-command">click this cell</p>
-          <p className="decision-risk">{current.risk} mine risk</p>
+          <div className="decision-verdict" key={`verdict-${agent}`}>
+            <span className={`evidence-chip ${agent === "neural" ? "evidence-chip-neural" : ""}`}>{current.label}</span>
+            <p className={`decision-risk ${agent === "neural" ? "decision-risk-neural" : ""}`}>{current.risk} mine risk</p>
+          </div>
           <div className="agent-tabs" role="group" aria-label="Agent policy">
             {(Object.keys(details) as Agent[]).map((name) => (
               <button className={agent === name ? "is-active" : ""} key={name} onClick={() => setAgent(name)} type="button">{name}</button>
             ))}
           </div>
-          <div className="decision-evidence">
+          <div className="decision-evidence" key={`evidence-${agent}`}>
             <p>{current.evidence}</p>
             <dl>
               <div><dt>method</dt><dd>{current.method}</dd></div>
