@@ -29,4 +29,4 @@ Ground-truth mines live separately. `hidden_mines` is unavailable until random p
 
 ## current boundary
 
-This module intentionally stops at board state. The next environment slice will add flattened actions, Gymnasium-style reset/step behavior, serialization, and replay events without changing the visible-state contract.
+`MinesweeperBoard` stops at board state. `MinesweeperEnv` wraps it with flattened actions, Gymnasium-style reset/step behavior, and replay events without changing the visible-state contract.
