@@ -9,8 +9,9 @@ TRAIN_FLAGS ?=
 BENCHMARK_GAMES ?= 500
 EVALUATION_SEED_START ?= 20000
 REPORT ?= artifacts/benchmark.json
+CALIBRATION_REPORT ?= artifacts/calibration.json
 
-.PHONY: install install-train format lint test check generate-data train benchmark
+.PHONY: install install-train format lint test check generate-data train benchmark calibrate
 
 install:
 	$(PYTHON) -m pip install -e ".[dev]"
@@ -37,3 +38,6 @@ train:
 
 benchmark:
 	$(PYTHON) -m sweeper.evaluation --checkpoint $(CHECKPOINT) --output $(REPORT) --games $(BENCHMARK_GAMES) --seed-start $(EVALUATION_SEED_START)
+
+calibrate:
+	$(PYTHON) -m sweeper.models.evaluate --dataset $(DATASET) --checkpoint $(CHECKPOINT) --output $(CALIBRATION_REPORT)
