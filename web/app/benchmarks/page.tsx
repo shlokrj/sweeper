@@ -15,35 +15,26 @@ export default function BenchmarksPage() {
     <main className="site-page inner-page">
       <SiteNav active="benchmarks" />
       <section className="inner-heading benchmark-heading">
-        <p className="signal-label">HELD-OUT EVALUATION</p>
-        <h1>500 fixed boards.</h1>
-        <p>Beginner boards, 9 × 9, 10 mines. Every agent receives the same seeds from 20000 through 20499.</p>
+        <h1>Benchmarks</h1>
+        <p>500 beginner boards, 9 × 9, 10 mines. Every agent sees the same seeds from 20000 through 20499.</p>
       </section>
 
       <section className="benchmark-highlight" aria-label="Best observed result">
-        <span className="signal-label">BEST WIN RATE</span>
-        <strong>90.6%</strong>
-        <p>hybrid and CNN hybrid</p>
+        <div>
+          <span>best win rate</span>
+          <strong>90.6%</strong>
+        </div>
+        <p>Hybrid and CNN hybrid on the held-out board set.</p>
       </section>
 
-      <section className="benchmark-table-wrap" aria-labelledby="benchmark-table-title">
-        <div className="benchmark-table-note">
-          <p className="signal-label" id="benchmark-table-title">RUN / AUGMENTED CNN</p>
-          <p>Win rate measures complete boards solved without a mine click.</p>
-        </div>
+      <section className="benchmark-table-wrap" aria-label="Agent benchmark results">
         <div className="benchmark-table" role="table" aria-label="Agent benchmark results">
           <div className="benchmark-row benchmark-head" role="row">
-            <span role="columnheader">agent</span>
-            <span role="columnheader">win rate</span>
-            <span role="columnheader">avg moves</span>
-            <span role="columnheader">decision rule</span>
+            <span role="columnheader">agent</span><span role="columnheader">win rate</span><span role="columnheader">avg moves</span><span role="columnheader">decision rule</span>
           </div>
           {benchmarkRows.map(([agent, winRate, moves, rule], index) => (
             <div className={`benchmark-row ${index >= 5 ? "benchmark-model" : ""}`} key={agent} role="row">
-              <span role="cell">{agent}</span>
-              <strong role="cell">{winRate}</strong>
-              <span role="cell">{moves}</span>
-              <span role="cell">{rule}</span>
+              <span role="cell">{agent}</span><strong role="cell">{winRate}</strong><span role="cell">{moves}</span><span role="cell">{rule}</span>
             </div>
           ))}
         </div>
