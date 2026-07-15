@@ -1,29 +1,33 @@
-const BAYER = [
-  [0, 8, 2, 10],
-  [12, 4, 14, 6],
-  [3, 11, 1, 9],
-  [15, 7, 13, 5],
-];
-
 function svgUrl(svg: string): string {
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
 /**
- * An ordered-dither mask that dissolves the board toward its top left corner.
- * The threshold rises along the x + y diagonal, so tiles break into square
- * pixels instead of fading through translucency.
+ * A sporadic erosion mask. The board stays solid on the right and crumbles
+ * away along a steep slanted band, with a seeded per-pixel hash deciding
+ * which small pixels survive, so the edge looks eroded rather than cut.
  */
-export function ditherMask(size = 32, clearDiagonal = 4, solidDiagonal = 16): string {
+export function ditherMask(size = 64, seed = 7): string {
+  const hash = (x: number, y: number) => {
+    let h = (x * 374761393 + y * 668265263 + seed * 1442695041) >>> 0;
+    h = ((h ^ (h >>> 13)) * 1274126177) >>> 0;
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+  };
+  const bandStart = 0.06;
+  const bandEnd = 0.5;
+  const visible = (x: number, y: number) => {
+    const progress = ((x + 0.5 * y) / size - bandStart) / (bandEnd - bandStart);
+    if (progress >= 1) return true;
+    if (progress <= 0) return false;
+    return hash(x, y) < Math.pow(progress, 1.6);
+  };
   const rows: string[] = [];
-  const threshold = (x: number, y: number) =>
-    Math.min(17, Math.max(0, Math.floor(((x + y + 1 - clearDiagonal) / (solidDiagonal - clearDiagonal)) * 17)));
   for (let y = 0; y < size; y += 1) {
     let x = 0;
     while (x < size) {
-      if (BAYER[y % 4][x % 4] < threshold(x, y)) {
+      if (visible(x, y)) {
         let run = 1;
-        while (x + run < size && BAYER[y % 4][(x + run) % 4] < threshold(x + run, y)) run += 1;
+        while (x + run < size && visible(x + run, y)) run += 1;
         rows.push(`<rect x='${x}' y='${y}' width='${run}' height='1'/>`);
         x += run;
       } else {
