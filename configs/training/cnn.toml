@@ -1,0 +1,13 @@
+[dataset]
+rows = 9
+columns = 9
+mines = 10
+games = 20000
+max_component_size = 18
+
+[training]
+epochs = 80
+batch_size = 256
+learning_rate = 0.0003
+width = 64
+residual_blocks = 4
