@@ -10,6 +10,7 @@ import torch
 from torch.nn import functional as functional
 from torch.utils.data import DataLoader, Dataset, Subset
 
+from sweeper.models.augment import RandomSquareSymmetryDataset
 from sweeper.models.cnn import MineProbabilityCNN
 
 
@@ -47,14 +48,18 @@ def main() -> None:
     parser.add_argument("--width", type=int, default=64)
     parser.add_argument("--residual-blocks", type=int, default=4)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--augment-symmetries", action="store_true")
     arguments = parser.parse_args()
 
     torch.manual_seed(arguments.seed)
     dataset = LabeledStateDataset(arguments.dataset)
     train_indices, validation_indices = _split_seed_indices(dataset.seeds, arguments.seed)
-    train_loader = DataLoader(
-        Subset(dataset, train_indices), batch_size=arguments.batch_size, shuffle=True
+    train_dataset: Dataset[tuple[torch.Tensor, torch.Tensor, torch.Tensor]] = Subset(
+        dataset, train_indices
     )
+    if arguments.augment_symmetries:
+        train_dataset = RandomSquareSymmetryDataset(train_dataset)
+    train_loader = DataLoader(train_dataset, batch_size=arguments.batch_size, shuffle=True)
     validation_loader = DataLoader(
         Subset(dataset, validation_indices), batch_size=arguments.batch_size
     )

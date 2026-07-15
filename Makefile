@@ -4,6 +4,7 @@ CHECKPOINT ?= artifacts/cnn.pt
 GAMES ?= 20000
 EPOCHS ?= 80
 BATCH_SIZE ?= 256
+TRAIN_FLAGS ?=
 BENCHMARK_GAMES ?= 500
 EVALUATION_SEED_START ?= 20000
 REPORT ?= artifacts/benchmark.json
@@ -31,7 +32,7 @@ generate-data:
 	$(PYTHON) -m sweeper.data --output $(DATASET) --games $(GAMES)
 
 train:
-	$(PYTHON) -m sweeper.models.train --dataset $(DATASET) --checkpoint $(CHECKPOINT) --epochs $(EPOCHS) --batch-size $(BATCH_SIZE)
+	$(PYTHON) -m sweeper.models.train --dataset $(DATASET) --checkpoint $(CHECKPOINT) --epochs $(EPOCHS) --batch-size $(BATCH_SIZE) $(TRAIN_FLAGS)
 
 benchmark:
 	$(PYTHON) -m sweeper.evaluation --checkpoint $(CHECKPOINT) --output $(REPORT) --games $(BENCHMARK_GAMES) --seed-start $(EVALUATION_SEED_START)
