@@ -13,6 +13,8 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next"
   },
   "dependencies": {
+    "@fontsource-variable/inclusive-sans": "^5.2.8",
+    "@fontsource/press-start-2p": "^5.2.7",
     "next": "16.2.6",
     "react": "19.2.6",
     "react-dom": "19.2.6"
