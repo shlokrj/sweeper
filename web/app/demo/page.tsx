@@ -29,6 +29,7 @@ const details: Record<Agent, { label: string; risk: string; method: string; evid
 export default function DemoPage() {
   const [agent, setAgent] = useState<Agent>("hybrid");
   const [selected, setSelected] = useState("E6");
+  const [hovered, setHovered] = useState<string | null>(null);
   const current = details[agent];
 
   return (
@@ -39,28 +40,41 @@ export default function DemoPage() {
         <p>Pick a cell. The panel shows how each policy reads the same board.</p>
       </section>
 
-      <section className="demo-surface" aria-label="Minesweeper demo">
+      <section className="demo-surface corner-ticks" aria-label="Minesweeper demo">
         <div className="demo-board-area">
           <div className="demo-meta"><span>9 × 9 board · 10 mines</span><span>move 12</span></div>
-          <div className="demo-board" role="grid" aria-label="Minesweeper board">
-            {board.flatMap((row, rowIndex) => row.map((cell, columnIndex) => {
-              const coordinate = `${columns[columnIndex]}${rowIndex + 1}`;
-              const selectedCell = selected === coordinate;
-              const recommendedCell = coordinate === "E6";
-              return (
-                <button
-                  aria-label={`${coordinate}, ${cell === "covered" ? "covered" : cell === "flag" ? "flagged" : `${cell} adjacent mines`}`}
-                  aria-selected={selectedCell}
-                  className={`demo-cell ${cell === "covered" ? "demo-cell-covered" : ""} ${cell === "flag" ? "demo-cell-flag" : ""} ${typeof cell === "number" ? `demo-number-${cell}` : ""} ${selectedCell ? "is-selected" : ""} ${recommendedCell ? "is-recommended" : ""}`}
-                  key={coordinate}
-                  onClick={() => setSelected(coordinate)}
-                  role="gridcell"
-                  type="button"
-                >
-                  {cell === "flag" ? <FlagMark compact /> : cell === "covered" || cell === 0 ? "" : cell}
-                </button>
-              );
-            }))}
+          <div className="board-frame">
+            <div className="frame-cols" aria-hidden="true">
+              {columns.map((column) => (
+                <span className={hovered?.[0] === column ? "is-live" : ""} key={column}>{column}</span>
+              ))}
+            </div>
+            <div className="frame-rows" aria-hidden="true">
+              {columns.map((_, rowIndex) => (
+                <span className={hovered?.slice(1) === `${rowIndex + 1}` ? "is-live" : ""} key={rowIndex}>{rowIndex + 1}</span>
+              ))}
+            </div>
+            <div className="demo-board" role="grid" aria-label="Minesweeper board" onMouseLeave={() => setHovered(null)}>
+              {board.flatMap((row, rowIndex) => row.map((cell, columnIndex) => {
+                const coordinate = `${columns[columnIndex]}${rowIndex + 1}`;
+                const selectedCell = selected === coordinate;
+                const recommendedCell = coordinate === "E6";
+                return (
+                  <button
+                    aria-label={`${coordinate}, ${cell === "covered" ? "covered" : cell === "flag" ? "flagged" : `${cell} adjacent mines`}`}
+                    aria-selected={selectedCell}
+                    className={`demo-cell ${cell === "covered" ? "demo-cell-covered" : ""} ${cell === "flag" ? "demo-cell-flag" : ""} ${typeof cell === "number" ? `demo-number-${cell}` : ""} ${selectedCell ? "is-selected" : ""} ${recommendedCell ? "is-recommended" : ""}`}
+                    key={coordinate}
+                    onClick={() => setSelected(coordinate)}
+                    onMouseEnter={() => setHovered(coordinate)}
+                    role="gridcell"
+                    type="button"
+                  >
+                    {cell === "flag" ? <FlagMark compact /> : cell === "covered" || cell === 0 ? "" : cell}
+                  </button>
+                );
+              }))}
+            </div>
           </div>
           <div className="demo-board-key">
             <span><i className="key-green" /> recommended safe</span>
