@@ -12,7 +12,7 @@ const benchmarkRows = [
   ["CNN hybrid", "90.6%", "19.6", "model rank + proof"],
 ];
 
-const highlightStyle = { "--board-dust": pixelDust(132, 12, 17) } as CSSProperties;
+const highlightStyle = { "--board-dust": pixelDust(160, 18, 17, 0.4) } as CSSProperties;
 
 export default function BenchmarksPage() {
   return (
@@ -23,7 +23,7 @@ export default function BenchmarksPage() {
         <p>500 beginner boards, 9 × 9, 10 mines. Every agent sees the same seeds from 20000 through 20499.</p>
       </section>
 
-      <section className="benchmark-highlight" style={highlightStyle} aria-label="Best observed result">
+      <section className="benchmark-highlight corner-ticks" style={highlightStyle} aria-label="Best observed result">
         <div>
           <span>best win rate</span>
           <strong>90.6%</strong>
