@@ -191,6 +191,8 @@ def _restore_checkpoint(
     if isinstance(optimizer_state, dict):
         optimizer.load_state_dict(optimizer_state)
         _move_optimizer_state(optimizer, device)
+    else:
+        print("resume checkpoint has no optimizer state, using a fresh optimizer")
 
     best_model_state = deepcopy(payload["model_state"])
     best_validation_loss = float(
