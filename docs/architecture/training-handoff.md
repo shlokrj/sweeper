@@ -37,6 +37,20 @@ make train PYTHON=.venv/bin/python DATASET=data/beginner-strategy-labels.npz CHE
 
 Use the strategy data set for both training and calibration. The first-click policy remains part of the experiment configuration.
 
+## resume after interruption
+
+New checkpoints store the current model, the best validation model, optimizer state, and completed epoch. Resume to the original total epoch count with the same checkpoint path:
+
+```bash
+make train PYTHON=.venv/bin/python DATASET=data/beginner-strategy-labels.npz CHECKPOINT=artifacts/cnn-strategy-control.pt EPOCHS=80 BATCH_SIZE=1024 TRAIN_FLAGS='--resume artifacts/cnn-strategy-control.pt'
+```
+
+Legacy checkpoints contain only model weights. Supply the last completed epoch when resuming one:
+
+```bash
+make train PYTHON=.venv/bin/python DATASET=data/beginner-strategy-labels.npz CHECKPOINT=artifacts/cnn-strategy-control.pt EPOCHS=80 BATCH_SIZE=1024 TRAIN_FLAGS='--resume artifacts/cnn-strategy-control.pt --resume-epoch 28'
+```
+
 ## outputs and device
 
 - Dataset archives are written below ignored `data/`.
