@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { type CSSProperties, useState } from "react";
 import { FlagMark } from "./flag-mark";
 
 const blastPixels = [
@@ -16,26 +16,29 @@ export function BrandMark() {
   return (
     <button
       aria-label="Trigger a Minesweeper explosion"
-      className="brand-trigger"
+      className="brand"
       onClick={() => setBurst((count) => count + 1)}
       type="button"
     >
-      <FlagMark />
-      {burst > 0 && (
-        <span className="brand-explosion" key={burst} aria-hidden="true">
-          {blastPixels.map(([x, y, size, color], index) => (
-            <i
-              key={index}
-              style={{
-                "--blast-color": color,
-                "--blast-size": `${size}px`,
-                "--blast-x": `${x}px`,
-                "--blast-y": `${y}px`,
-              } as React.CSSProperties}
-            />
-          ))}
-        </span>
-      )}
+      <span className="brand-icon">
+        <FlagMark />
+        {burst > 0 && (
+          <span className="brand-explosion" key={burst} aria-hidden="true">
+            {blastPixels.map(([x, y, size, color], index) => (
+              <i
+                key={index}
+                style={{
+                  "--blast-color": color,
+                  "--blast-size": `${size}px`,
+                  "--blast-x": `${x}px`,
+                  "--blast-y": `${y}px`,
+                } as CSSProperties}
+              />
+            ))}
+          </span>
+        )}
+      </span>
+      <span>sweeper</span>
     </button>
   );
 }
