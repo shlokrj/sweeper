@@ -107,7 +107,7 @@ export default function Home() {
                     "--debris-size": `${particle.size}px`,
                     "--debris-x": `${particle.x}%`,
                     "--debris-y": `${particle.y}%`,
-                    "--wave-delay": `${Math.round(Math.max(0, particle.x + particle.y) * 12)}ms`,
+                    "--wave-delay": `${Math.round((100 - Math.max(0, particle.x) + particle.y) * 12)}ms`,
                   } as CSSProperties}
                 />
               ))}
@@ -120,7 +120,7 @@ export default function Home() {
                     key={`${rowIndex}-${columnIndex}`}
                     style={{
                       "--cell-delay": `${160 + (8 - columnIndex) * 42 + rowIndex * 14}ms`,
-                      "--wave-delay": `${(rowIndex + columnIndex) * 150}ms`,
+                      "--wave-delay": `${(rowIndex + (8 - columnIndex)) * 150}ms`,
                     } as CSSProperties}
                   >
                     {cell === "flag" ? <FlagMark compact /> : labelForCell[cell]}
