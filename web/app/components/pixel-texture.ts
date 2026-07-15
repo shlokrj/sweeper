@@ -3,8 +3,8 @@ function svgUrl(svg: string): string {
 }
 
 /**
- * A sporadic erosion mask. The board stays solid on the right and breaks
- * into irregular clusters toward the left, without a single directional edge.
+ * A sporadic erosion mask. A roughly 30-degree front moves down and right,
+ * then breaks into coarse clusters instead of ending as a clean diagonal.
  */
 export function ditherMask(size = 64, seed = 7): string {
   const hash = (x: number, y: number) => {
@@ -27,9 +27,10 @@ export function ditherMask(size = 64, seed = 7): string {
 
   const visible = (x: number, y: number) => {
     const progress = (x + 0.5) / size;
+    const cut = 0.12 + ((y + 0.5) / size) * 0.5;
     const clusters = (noise(x, y, 12) - 0.5) * 0.42 + (noise(x, y, 4) - 0.5) * 0.14;
-    const density = Math.max(0, Math.min(1, (progress - 0.07) / 0.5 + clusters));
-    return hash(x, y) < Math.pow(density, 1.35);
+    const density = Math.max(0, Math.min(1, (progress - cut) / 0.23 + clusters));
+    return hash(x, y) < Math.pow(density, 1.2);
   };
   const rows: string[] = [];
   for (let y = 0; y < size; y += 1) {
