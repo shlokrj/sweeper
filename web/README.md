@@ -1,16 +1,16 @@
 # sweeper web
 
-The browser workspace for inspecting a Minesweeper board, its solver evidence, and model confidence.
+A local interface for inspecting Minesweeper boards, solver evidence, and benchmark results.
 
-## Local work
+## Run locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-Run `npm run build` before publishing a change.
+Open `http://localhost:3000` after the server starts.
 
 ## Current scope
 
-The first screen uses a fixed sample board. It is ready for a board-state API and live agent traces.
+The current interface uses a fixed sample board and recorded benchmark values. It is ready for a board-state API and live agent traces.
