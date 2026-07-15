@@ -1,6 +1,8 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { FlagMark } from "./components/flag-mark";
 import { SiteNav } from "./components/site-nav";
+import { ditherMask, pixelDust } from "./components/pixel-texture";
 
 type HeroCell = "covered" | "clear" | "flag" | "one" | "two" | "three";
 
@@ -25,6 +27,11 @@ const labelForCell: Record<HeroCell, string> = {
   three: "3",
 };
 
+const stageStyle = {
+  "--board-dither": ditherMask(),
+  "--board-dust": pixelDust(),
+} as CSSProperties;
+
 export default function Home() {
   return (
     <main className="site-page home-page">
@@ -32,7 +39,9 @@ export default function Home() {
 
       <section className="home-hero" aria-labelledby="home-title">
         <div className="hero-copy">
-          <h1 id="home-title">Where logic meets chance.</h1>
+          <h1 id="home-title">
+            Where logic meets chance.<span className="pixel-caret" aria-hidden="true" />
+          </h1>
           <p>
             Sweeper is an explainable Minesweeper agent. It shows the proof behind a move, then uses probability only when the board requires a guess.
           </p>
@@ -47,12 +56,16 @@ export default function Home() {
           </dl>
         </div>
 
-        <div className="hero-board-stage" aria-label="Illustrated Minesweeper board">
+        <div className="hero-board-stage" style={stageStyle} aria-label="Illustrated Minesweeper board">
           <div className="board-dust" aria-hidden="true" />
           <div className="hero-board" aria-hidden="true">
             {heroBoard.flatMap((row, rowIndex) =>
               row.map((cell, columnIndex) => (
-                <span className={`hero-cell hero-cell-${cell}`} key={`${rowIndex}-${columnIndex}`}>
+                <span
+                  className={`hero-cell hero-cell-${cell}`}
+                  key={`${rowIndex}-${columnIndex}`}
+                  style={{ "--cell-delay": `${(rowIndex + columnIndex) * 36}ms` } as CSSProperties}
+                >
                   {cell === "flag" ? <FlagMark compact /> : labelForCell[cell]}
                 </span>
               )),
