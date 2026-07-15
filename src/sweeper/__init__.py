@@ -1,1 +1,1 @@
-"""Research tools for explainable Minesweeper agents."""
+"""Research tools for evaluating Minesweeper agents."""

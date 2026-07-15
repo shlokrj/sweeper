@@ -44,7 +44,7 @@ class SymbolicAgent:
             action=fallback.action,
             source="symbolic_fallback",
             mine_risk=fallback.mine_risk,
-            rationale="no guaranteed safe move; " + fallback.rationale,
+            rationale="no guaranteed safe move. " + fallback.rationale,
         )
 
 
@@ -88,7 +88,7 @@ class ExactAgent:
             action=fallback.action,
             source="exact_fallback",
             mine_risk=fallback.mine_risk,
-            rationale="exact enumeration was unavailable; " + fallback.rationale,
+            rationale="exact enumeration was unavailable. " + fallback.rationale,
         )
 
 

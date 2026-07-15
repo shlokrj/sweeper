@@ -34,7 +34,7 @@ class MinesweeperBoard:
 
     Random boards with ``safe_first_click=True`` place mines on the first reveal so
     that selected cell is guaranteed safe. Explicit ``mine_positions`` are useful
-    for deterministic examples and tests; they are preserved exactly as supplied.
+    for deterministic examples and tests. They are preserved exactly as supplied.
     """
 
     _NEIGHBOR_OFFSETS = (

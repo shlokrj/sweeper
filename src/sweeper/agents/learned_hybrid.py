@@ -74,5 +74,5 @@ class NeuralHybridAgent:
             action=neural.action,
             source="neural_hybrid_neural",
             mine_risk=neural.mine_risk,
-            rationale="exact enumeration was unavailable; " + neural.rationale,
+            rationale="exact enumeration was unavailable. " + neural.rationale,
         )

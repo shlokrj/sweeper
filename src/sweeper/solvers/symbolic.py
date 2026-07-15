@@ -65,7 +65,7 @@ class SymbolicSolver:
         return result
 
     def solve_constraints(self, constraints: tuple[Constraint, ...]) -> SymbolicResult:
-        """Solve a supplied constraint system; useful for focused reasoning tests."""
+        """Solve a supplied constraint system for focused reasoning tests."""
 
         evidence = {constraint: _Evidence(None, ()) for constraint in constraints}
         safe_cells: dict[Coordinate, SymbolicProof] = {}
