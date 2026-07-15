@@ -39,6 +39,7 @@ button { font: inherit; }
 @keyframes board-arrive { 0% { opacity: 0; transform: translate(36px, 10px) scale(0.94); } 68% { opacity: 1; transform: translate(-3px, 0) scale(1.008); } 100% { opacity: 1; transform: none; } }
 @keyframes cell-resolve { 0% { opacity: 0; transform: scale(0.64); } 72% { opacity: 1; transform: scale(1.04); } 100% { opacity: 1; transform: none; } }
 @keyframes debris-arrive { 0% { opacity: 0; transform: translate(var(--debris-drift-x), var(--debris-drift-y)) scale(0.35); } 72% { opacity: var(--debris-opacity); transform: translate(2px, -1px) scale(1.06); } 100% { opacity: var(--debris-opacity); transform: none; } }
+@keyframes mine-explode { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.2); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 70% { opacity: 1; transform: translate(calc(-50% + var(--blast-x)), calc(-50% + var(--blast-y))) scale(1); } 100% { opacity: 0; transform: translate(calc(-50% + var(--blast-x)), calc(-50% + var(--blast-y))) scale(0.6); } }
 @keyframes flag-wiggle { 0%, 100% { transform: none; } 50% { transform: translateY(-2px); } }
 @keyframes demo-cell-in { from { opacity: 0; transform: scale(0.72); } to { opacity: 1; transform: none; } }
 @keyframes safe-pulse { 0%, 100% { outline-color: var(--green); } 50% { outline-color: rgba(132, 173, 131, 0.3); } }
@@ -57,6 +58,8 @@ button { font: inherit; }
 .brand:hover .flag-mark, .brand:hover .brand-word, .brand:focus-visible .flag-mark, .brand:focus-visible .brand-word { animation: flag-wiggle 340ms steps(2, end) 2; }
 .brand:hover .brand-word, .brand:focus-visible .brand-word { color: var(--red-deep); }
 .brand:focus-visible { outline: 2px solid var(--red); outline-offset: 5px; }
+.brand-explosion { position: absolute; top: 50%; left: 50%; width: 0; height: 0; pointer-events: none; }
+.brand-explosion i { position: absolute; top: 0; left: 0; display: block; width: var(--blast-size); height: var(--blast-size); background: var(--blast-color); animation: mine-explode 460ms steps(5, end) forwards; }
 .site-nav nav { display: flex; align-items: center; gap: clamp(25px, 3.8vw, 60px); }
 .site-nav nav a { position: relative; padding: 7px 0; color: var(--muted); font-size: 0.98rem; transition: color 140ms ease; }
 .site-nav nav a::after { position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background: var(--red); content: ""; transform: scaleX(0); transform-origin: left; transition: transform 200ms steps(5, end); }
