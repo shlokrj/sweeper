@@ -40,23 +40,24 @@ type DebrisParticle = {
 
 const boardDebris: DebrisParticle[] = (() => {
   const colors = ["#dd8582", "#84ad83", "#84b3cf", "#cbbba5"];
-  const sizes = [3, 5, 6, 8, 11, 15];
+  const sizes = [2, 3, 4, 5, 6, 8, 10];
   let state = 41;
   const next = () => {
     state = (state * 1664525 + 1013904223) >>> 0;
     return state / 4294967296;
   };
 
-  return Array.from({ length: 112 }, (_, index) => {
-    const y = 3 + next() * 94;
+  return Array.from({ length: 68 }, (_, index) => {
+    const y = Math.max(2, Math.min(98, 3 + (index / 67) * 94 + (next() - 0.5) * 8));
     const cut = 17 + y * 0.48;
-    const x = cut - 5 - Math.pow(next(), 0.64) * 52;
+    const distance = index % 11 === 0 ? 24 + next() * 16 : 4 + Math.pow(next(), 1.65) * 24;
+    const x = cut - distance;
     return {
       color: colors[Math.floor(next() * colors.length)],
-      delay: 90 + index * 9 + Math.floor(next() * 130),
-      driftX: -8 - Math.floor(next() * 34),
-      driftY: -16 + Math.floor(next() * 32),
-      opacity: 0.3 + next() * 0.6,
+      delay: 120 + index * 7 + Math.floor(next() * 80),
+      driftX: -5 - Math.floor(next() * 22),
+      driftY: -10 + Math.floor(next() * 20),
+      opacity: 0.25 + next() * 0.42,
       size: sizes[Math.floor(next() * sizes.length)],
       x,
       y,
@@ -65,7 +66,7 @@ const boardDebris: DebrisParticle[] = (() => {
 })();
 
 const stageStyle = {
-  "--board-dither": ditherMask(48, 17),
+  "--board-dither": ditherMask(64, 17),
 } as CSSProperties;
 
 export default function Home() {

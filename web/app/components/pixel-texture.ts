@@ -28,9 +28,9 @@ export function ditherMask(size = 64, seed = 7): string {
   const visible = (x: number, y: number) => {
     const progress = (x + 0.5) / size;
     const cut = 0.12 + ((y + 0.5) / size) * 0.5;
-    const clusters = (noise(x, y, 12) - 0.5) * 0.42 + (noise(x, y, 4) - 0.5) * 0.14;
-    const density = Math.max(0, Math.min(1, (progress - cut) / 0.23 + clusters));
-    return hash(x, y) < Math.pow(density, 1.2);
+    const clusters = (noise(x, y, 12) - 0.5) * 0.24 + (noise(x, y, 4) - 0.5) * 0.08;
+    const density = Math.max(0, Math.min(1, (progress - cut) / 0.19 + clusters));
+    return hash(x, y) < Math.pow(density, 1.15);
   };
   const rows: string[] = [];
   for (let y = 0; y < size; y += 1) {
