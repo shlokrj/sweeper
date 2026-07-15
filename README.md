@@ -34,8 +34,9 @@ The first implementation target is the custom game engine and its test suite. Ad
 
 ## current planning artifacts
 
-- [roadmap](ROADMAP.md) — milestones, deliverables, and acceptance checks.
-- Local `agent.md`, `skills.md`, and `spec.md` files — working guidance for the active project; these are intentionally ignored and never committed.
+- [roadmap](docs/planning/roadmap.md) — milestones, deliverables, and acceptance checks.
+- [project structure](docs/planning/project-structure.md) — the purpose of every top-level folder and the planned package layout.
+- Local `docs/internal/agent.md`, `docs/internal/skills.md`, and `docs/internal/spec.md` files — working guidance for the active project; these are intentionally ignored and never committed.
 
 ## principles
 
@@ -44,4 +45,4 @@ The first implementation target is the custom game engine and its test suite. Ad
 - A neural estimate is never presented as a mathematical guarantee.
 - Every agent is evaluated on the same seeded boards.
 
-See [ROADMAP.md](ROADMAP.md) for the staged outline.
+See the [project roadmap](docs/planning/roadmap.md) for the staged outline.

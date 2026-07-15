@@ -1,7 +1,7 @@
 # local project guidance
-/agent.md
-/skills.md
-/spec.md
+/docs/internal/agent.md
+/docs/internal/skills.md
+/docs/internal/spec.md
 
 # python
 __pycache__/
@@ -13,10 +13,10 @@ __pycache__/
 venv/
 
 # generated research data and artifacts
-data/
-artifacts/
-mlruns/
-wandb/
+/data/
+/artifacts/
+/mlruns/
+/wandb/
 
 # local environment files
 .env
