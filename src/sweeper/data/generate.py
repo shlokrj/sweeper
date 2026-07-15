@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 
@@ -21,6 +22,7 @@ class GenerationConfig:
     seeds: tuple[int, ...]
     max_steps_per_game: int = 200
     max_component_size: int = 18
+    initial_click_policy: Literal["center", "seeded_uniform"] = "center"
 
 
 @dataclass(frozen=True)
@@ -42,6 +44,8 @@ def generate_labeled_states(config: GenerationConfig) -> tuple[LabeledState, ...
 
     if config.max_steps_per_game <= 0:
         raise ValueError("max_steps_per_game must be positive")
+    if config.initial_click_policy not in {"center", "seeded_uniform"}:
+        raise ValueError("initial_click_policy must be 'center' or 'seeded_uniform'")
 
     exact_solver = ExactSolver(max_component_size=config.max_component_size)
     symbolic_solver = SymbolicSolver()
@@ -54,7 +58,14 @@ def generate_labeled_states(config: GenerationConfig) -> tuple[LabeledState, ...
             config.mine_count,
             seed=seed,
         )
-        board.reveal(_initial_coordinate(config.rows, config.columns))
+        board.reveal(
+            _initial_coordinate(
+                config.rows,
+                config.columns,
+                seed,
+                config.initial_click_policy,
+            )
+        )
         step = 0
 
         while board.status is GameStatus.ACTIVE and step < config.max_steps_per_game:
@@ -109,8 +120,16 @@ def save_dataset(path: Path, states: tuple[LabeledState, ...]) -> None:
     )
 
 
-def _initial_coordinate(rows: int, columns: int) -> tuple[int, int]:
-    return rows // 2, columns // 2
+def _initial_coordinate(
+    rows: int,
+    columns: int,
+    seed: int,
+    policy: Literal["center", "seeded_uniform"],
+) -> tuple[int, int]:
+    if policy == "center":
+        return rows // 2, columns // 2
+    generator = np.random.default_rng(seed)
+    return int(generator.integers(rows)), int(generator.integers(columns))
 
 
 def _action_mask(board: MinesweeperBoard) -> np.ndarray:

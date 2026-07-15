@@ -1,6 +1,7 @@
 import numpy as np
 
 from sweeper.data import GenerationConfig, generate_labeled_states, save_dataset
+from sweeper.data.generate import _initial_coordinate
 
 
 def test_generation_is_seeded_and_keeps_hidden_truth_separate_from_observations() -> None:
@@ -34,3 +35,11 @@ def test_save_dataset_writes_stacked_training_arrays(tmp_path) -> None:
         assert dataset["observations"].shape[0] == len(states)
         assert dataset["action_masks"].dtype == np.bool_
         assert dataset["ground_truth_mines"].dtype == np.bool_
+
+
+def test_seeded_uniform_initial_clicks_are_reproducible_and_not_fixed_at_center() -> None:
+    first = tuple(_initial_coordinate(9, 9, seed, "seeded_uniform") for seed in range(10, 18))
+    second = tuple(_initial_coordinate(9, 9, seed, "seeded_uniform") for seed in range(10, 18))
+
+    assert first == second
+    assert any(coordinate != (4, 4) for coordinate in first)

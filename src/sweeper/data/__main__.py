@@ -20,6 +20,7 @@ def main() -> None:
     parser.add_argument("--seed-start", type=int, default=0)
     parser.add_argument("--max-steps", type=int, default=200)
     parser.add_argument("--max-component-size", type=int, default=18)
+    parser.add_argument("--initial-click", choices=("center", "seeded_uniform"), default="center")
     arguments = parser.parse_args()
     if arguments.games <= 0:
         raise ValueError("games must be positive")
@@ -31,6 +32,7 @@ def main() -> None:
         seeds=tuple(range(arguments.seed_start, arguments.seed_start + arguments.games)),
         max_steps_per_game=arguments.max_steps,
         max_component_size=arguments.max_component_size,
+        initial_click_policy=arguments.initial_click,
     )
     states = generate_labeled_states(config)
     save_dataset(arguments.output, states)
