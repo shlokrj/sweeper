@@ -2,6 +2,7 @@
 
 from sweeper.agents.base import Agent, AgentDecision
 from sweeper.agents.heuristic import LocalRiskAgent
+from sweeper.agents.neural import NeuralAgent
 from sweeper.agents.random_agent import RandomAgent
 from sweeper.agents.reasoning import ExactAgent, HybridAgent, SymbolicAgent
 
@@ -11,6 +12,7 @@ __all__ = [
     "ExactAgent",
     "HybridAgent",
     "LocalRiskAgent",
+    "NeuralAgent",
     "RandomAgent",
     "SymbolicAgent",
 ]
