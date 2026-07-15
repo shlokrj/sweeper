@@ -178,6 +178,7 @@ class MinesweeperEnv(gym.Env[np.ndarray, int]):
             raise RuntimeError("reset must be called before requesting info")
         return {
             "action_mask": self._action_mask(board),
+            "mine_count": board.mine_count,
             "remaining_mines": board.remaining_mines,
             "status": board.status.value,
             "episode_seed": self._episode_seed,
