@@ -8,6 +8,7 @@ from sweeper.environment.board import (
     MinesweeperBoard,
     RevealResult,
 )
+from sweeper.environment.environment import MinesweeperEnv, ReplayEvent
 
 __all__ = [
     "COVERED",
@@ -15,5 +16,7 @@ __all__ = [
     "Coordinate",
     "GameStatus",
     "MinesweeperBoard",
+    "MinesweeperEnv",
+    "ReplayEvent",
     "RevealResult",
 ]
