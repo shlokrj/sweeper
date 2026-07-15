@@ -4,8 +4,11 @@ CHECKPOINT ?= artifacts/cnn.pt
 GAMES ?= 20000
 EPOCHS ?= 80
 BATCH_SIZE ?= 256
+BENCHMARK_GAMES ?= 500
+EVALUATION_SEED_START ?= 20000
+REPORT ?= artifacts/benchmark.json
 
-.PHONY: install install-train format lint test check generate-data train
+.PHONY: install install-train format lint test check generate-data train benchmark
 
 install:
 	$(PYTHON) -m pip install -e ".[dev]"
@@ -29,3 +32,6 @@ generate-data:
 
 train:
 	$(PYTHON) -m sweeper.models.train --dataset $(DATASET) --checkpoint $(CHECKPOINT) --epochs $(EPOCHS) --batch-size $(BATCH_SIZE)
+
+benchmark:
+	$(PYTHON) -m sweeper.evaluation --checkpoint $(CHECKPOINT) --output $(REPORT) --games $(BENCHMARK_GAMES) --seed-start $(EVALUATION_SEED_START)
