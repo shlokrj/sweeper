@@ -1,6 +1,8 @@
-import torch
+import pytest
 
-from sweeper.models import MineProbabilityCNN, encode_visible_state
+torch = pytest.importorskip("torch")
+
+from sweeper.models import MineProbabilityCNN, encode_visible_state  # noqa: E402
 
 
 def test_cnn_encodes_visible_cells_and_returns_one_logit_per_cell() -> None:
