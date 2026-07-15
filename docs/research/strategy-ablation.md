@@ -22,3 +22,16 @@ make calibrate PYTHON=.venv/bin/python DATASET=data/beginner-strategy-labels.npz
 ```
 
 Compare standalone CNN win rate, neural-hybrid win rate, Brier score, mean absolute error, and expected calibration error. Treat the result as evidence about the extra channels, not as a test of the full strategy playbook.
+
+## Result
+
+Both checkpoints trained on the same 20,000-board strategy-label archive and were evaluated on 500 beginner boards with seeds 20000 through 20499.
+
+| Model | CNN win rate | Neural-hybrid win rate | Brier score | Mean absolute error | Expected calibration error |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| shared-data control | 88.0% | 91.0% | 0.000949 | 0.00927 | 0.00122 |
+| strategy-aware | 88.8% | 91.0% | 0.000460 | 0.00660 | 0.00179 |
+
+The three strategy channels improve standalone beginner-board play by 0.8 percentage points. They reduce Brier score by 51.5% and mean absolute error by 28.8%. They do not improve the hybrid win rate. Expected calibration error is slightly worse, though both values are low.
+
+The result supports keeping the strategy channels as an in-distribution probability feature. It does not support preferring that checkpoint over the control in the hybrid agent.
