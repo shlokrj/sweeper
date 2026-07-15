@@ -2,6 +2,7 @@
 /docs/internal/agent.md
 /docs/internal/skills.md
 /docs/internal/spec.md
+/docs/planning/roadmap.md
 
 # python
 __pycache__/
@@ -11,6 +12,9 @@ __pycache__/
 .ruff_cache/
 .venv/
 venv/
+build/
+dist/
+*.egg-info/
 
 # generated research data and artifacts
 /data/
