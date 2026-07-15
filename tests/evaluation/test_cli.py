@@ -52,5 +52,6 @@ def test_benchmark_cli_writes_one_shared_seed_report(
         "exact",
         "hybrid",
         "neural",
+        "neural_hybrid",
     }
     assert all(len(result["games"]) == 2 for result in report["agents"].values())

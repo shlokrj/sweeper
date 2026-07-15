@@ -14,6 +14,7 @@ from sweeper.agents import (
     HybridAgent,
     LocalRiskAgent,
     NeuralAgent,
+    NeuralHybridAgent,
     RandomAgent,
     SymbolicAgent,
 )
@@ -91,6 +92,11 @@ def _agents(
         "exact": ExactAgent(max_component_size=max_component_size),
         "hybrid": HybridAgent(max_component_size=max_component_size),
         "neural": NeuralAgent(checkpoint, device=device),
+        "neural_hybrid": NeuralHybridAgent(
+            checkpoint,
+            max_component_size=max_component_size,
+            device=device,
+        ),
     }
 
 
