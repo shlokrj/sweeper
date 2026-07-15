@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from copy import deepcopy
 from pathlib import Path
 
 import numpy as np
@@ -76,6 +77,8 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--augment-symmetries", action="store_true")
     parser.add_argument("--strategy-features", action="store_true")
+    parser.add_argument("--resume", type=Path)
+    parser.add_argument("--resume-epoch", type=int)
     arguments = parser.parse_args()
 
     torch.manual_seed(arguments.seed)
@@ -103,7 +106,20 @@ def main() -> None:
     optimizer = torch.optim.AdamW(model.parameters(), lr=arguments.learning_rate)
 
     best_validation_loss = float("inf")
-    for epoch in range(1, arguments.epochs + 1):
+    best_model_state = deepcopy(model.state_dict())
+    start_epoch = 0
+    if arguments.resume is not None:
+        start_epoch, best_validation_loss, best_model_state = _restore_checkpoint(
+            model,
+            optimizer,
+            arguments.resume,
+            expected_extra_channels=extra_channels,
+            resume_epoch=arguments.resume_epoch,
+            device=device,
+        )
+        print(f"resuming from epoch {start_epoch:03d} using {arguments.resume}")
+
+    for epoch in range(start_epoch + 1, arguments.epochs + 1):
         training_loss = _run_epoch(
             model,
             train_loader,
@@ -126,18 +142,101 @@ def main() -> None:
         )
         if validation_loss < best_validation_loss:
             best_validation_loss = validation_loss
-            arguments.checkpoint.parent.mkdir(parents=True, exist_ok=True)
-            torch.save(
-                {
-                    "model_state": model.state_dict(),
-                    "width": arguments.width,
-                    "residual_blocks": arguments.residual_blocks,
-                    "extra_channels": extra_channels,
-                    "mine_count": arguments.mine_count,
-                    "validation_loss": validation_loss,
-                },
-                arguments.checkpoint,
-            )
+            best_model_state = deepcopy(model.state_dict())
+        _save_checkpoint(
+            path=arguments.checkpoint,
+            best_model_state=best_model_state,
+            model=model,
+            optimizer=optimizer,
+            width=arguments.width,
+            residual_blocks=arguments.residual_blocks,
+            extra_channels=extra_channels,
+            mine_count=arguments.mine_count,
+            completed_epoch=epoch,
+            best_validation_loss=best_validation_loss,
+            last_validation_loss=validation_loss,
+        )
+
+
+def _restore_checkpoint(
+    model: MineProbabilityCNN,
+    optimizer: torch.optim.Optimizer,
+    path: Path,
+    *,
+    expected_extra_channels: int,
+    resume_epoch: int | None,
+    device: torch.device,
+) -> tuple[int, float, dict[str, torch.Tensor]]:
+    payload = torch.load(path, map_location="cpu", weights_only=True)
+    if not isinstance(payload, dict) or not isinstance(payload.get("model_state"), dict):
+        raise ValueError("resume checkpoint must contain a model_state mapping")
+    if int(payload.get("extra_channels", 0)) != expected_extra_channels:
+        raise ValueError("resume checkpoint uses incompatible extra feature channels")
+
+    completed_epoch = payload.get("completed_epoch")
+    if completed_epoch is None:
+        if resume_epoch is None:
+            raise ValueError("legacy checkpoints require --resume-epoch")
+        completed_epoch = resume_epoch
+    elif resume_epoch is not None and int(completed_epoch) != resume_epoch:
+        raise ValueError("--resume-epoch does not match the checkpoint")
+    if int(completed_epoch) < 0:
+        raise ValueError("resume epoch must be non-negative")
+
+    last_model_state = payload.get("last_model_state", payload["model_state"])
+    if not isinstance(last_model_state, dict):
+        raise ValueError("resume checkpoint contains an invalid last_model_state")
+    model.load_state_dict(last_model_state)
+    optimizer_state = payload.get("optimizer_state")
+    if isinstance(optimizer_state, dict):
+        optimizer.load_state_dict(optimizer_state)
+        _move_optimizer_state(optimizer, device)
+
+    best_model_state = deepcopy(payload["model_state"])
+    best_validation_loss = float(
+        payload.get("best_validation_loss", payload.get("validation_loss", float("inf")))
+    )
+    return int(completed_epoch), best_validation_loss, best_model_state
+
+
+def _save_checkpoint(
+    *,
+    path: Path,
+    best_model_state: dict[str, torch.Tensor],
+    model: MineProbabilityCNN,
+    optimizer: torch.optim.Optimizer,
+    width: int,
+    residual_blocks: int,
+    extra_channels: int,
+    mine_count: int,
+    completed_epoch: int,
+    best_validation_loss: float,
+    last_validation_loss: float,
+) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save(
+        {
+            "model_state": best_model_state,
+            "last_model_state": model.state_dict(),
+            "optimizer_state": optimizer.state_dict(),
+            "width": width,
+            "residual_blocks": residual_blocks,
+            "extra_channels": extra_channels,
+            "mine_count": mine_count,
+            "completed_epoch": completed_epoch,
+            "validation_loss": best_validation_loss,
+            "best_validation_loss": best_validation_loss,
+            "last_validation_loss": last_validation_loss,
+        },
+        path,
+    )
+
+
+def _move_optimizer_state(optimizer: torch.optim.Optimizer, device: torch.device) -> None:
+    for state in optimizer.state.values():
+        for key, value in state.items():
+            if isinstance(value, torch.Tensor):
+                state[key] = value.to(device)
 
 
 def _split_seed_indices(seeds: np.ndarray, seed: int) -> tuple[list[int], list[int]]:
