@@ -19,14 +19,17 @@ test("server-renders the light Minesweeper home page", async () => {
   assert.doesNotMatch(html, /local build|decision stack|Minesweeper research \/ 2026/i);
 });
 
-test("the demo and benchmark routes remain available", async () => {
-  const [navigation, demo, benchmarks] = await Promise.all([
+test("the navigation, demo, and benchmark routes remain available", async () => {
+  const [brandMark, navigation, demo, benchmarks] = await Promise.all([
+    readFile(new URL("../app/components/brand-mark.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/site-nav.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/demo/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/benchmarks/page.tsx", import.meta.url), "utf8"),
   ]);
+  assert.match(brandMark, /Trigger a Minesweeper explosion/);
   assert.match(navigation, /Home/);
   assert.match(navigation, /Benchmarks/);
   assert.match(demo, /setSelected/);
   assert.match(benchmarks, /90\.6%/);
+  assert.match(benchmarks, /seeds from 20000 through 20499/);
 });
