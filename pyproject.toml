@@ -10,7 +10,10 @@ readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
 authors = [{ name = "Shlok Jadhav", email = "shlok.jadhav.07@gmail.com" }]
-dependencies = []
+dependencies = [
+    "gymnasium>=1",
+    "numpy>=2",
+]
 
 [project.optional-dependencies]
 dev = [
