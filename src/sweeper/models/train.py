@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader, Dataset, Subset
 
 from sweeper.models.augment import RandomSquareSymmetryDataset
 from sweeper.models.cnn import MineProbabilityCNN
+from sweeper.models.strategy import STRATEGY_FEATURE_CHANNELS, encode_strategy_features
 
 
 class LabeledStateDataset(Dataset[tuple[torch.Tensor, torch.Tensor, torch.Tensor]]):
@@ -36,6 +37,30 @@ class LabeledStateDataset(Dataset[tuple[torch.Tensor, torch.Tensor, torch.Tensor
         )
 
 
+class StrategyLabeledStateDataset(Dataset[tuple[torch.Tensor, ...]]):
+    """Load labels and symbolic deductions for a strategy-aware probability model."""
+
+    def __init__(self, path: Path) -> None:
+        self._states = LabeledStateDataset(path)
+        with np.load(path) as archive:
+            self.symbolic_safe_masks = archive["symbolic_safe_masks"].copy()
+            self.symbolic_mine_masks = archive["symbolic_mine_masks"].copy()
+        self.seeds = self._states.seeds
+
+    def __len__(self) -> int:
+        return len(self._states)
+
+    def __getitem__(self, index: int) -> tuple[torch.Tensor, ...]:
+        observation, targets, target_mask = self._states[index]
+        return (
+            observation,
+            targets,
+            target_mask,
+            torch.from_numpy(self.symbolic_safe_masks[index]),
+            torch.from_numpy(self.symbolic_mine_masks[index]),
+        )
+
+
 def main() -> None:
     """Train a probability CNN with seed-disjoint validation states."""
 
@@ -47,16 +72,21 @@ def main() -> None:
     parser.add_argument("--learning-rate", type=float, default=3e-4)
     parser.add_argument("--width", type=int, default=64)
     parser.add_argument("--residual-blocks", type=int, default=4)
+    parser.add_argument("--mine-count", type=int, default=10)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--augment-symmetries", action="store_true")
+    parser.add_argument("--strategy-features", action="store_true")
     arguments = parser.parse_args()
 
     torch.manual_seed(arguments.seed)
-    dataset = LabeledStateDataset(arguments.dataset)
-    train_indices, validation_indices = _split_seed_indices(dataset.seeds, arguments.seed)
-    train_dataset: Dataset[tuple[torch.Tensor, torch.Tensor, torch.Tensor]] = Subset(
-        dataset, train_indices
+    dataset: LabeledStateDataset | StrategyLabeledStateDataset
+    dataset = (
+        StrategyLabeledStateDataset(arguments.dataset)
+        if arguments.strategy_features
+        else LabeledStateDataset(arguments.dataset)
     )
+    train_indices, validation_indices = _split_seed_indices(dataset.seeds, arguments.seed)
+    train_dataset: Dataset[tuple[torch.Tensor, ...]] = Subset(dataset, train_indices)
     if arguments.augment_symmetries:
         train_dataset = RandomSquareSymmetryDataset(train_dataset)
     train_loader = DataLoader(train_dataset, batch_size=arguments.batch_size, shuffle=True)
@@ -64,15 +94,32 @@ def main() -> None:
         Subset(dataset, validation_indices), batch_size=arguments.batch_size
     )
     device = _training_device()
-    model = MineProbabilityCNN(width=arguments.width, residual_blocks=arguments.residual_blocks).to(
-        device
-    )
+    extra_channels = STRATEGY_FEATURE_CHANNELS if arguments.strategy_features else 0
+    model = MineProbabilityCNN(
+        width=arguments.width,
+        residual_blocks=arguments.residual_blocks,
+        extra_channels=extra_channels,
+    ).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=arguments.learning_rate)
 
     best_validation_loss = float("inf")
     for epoch in range(1, arguments.epochs + 1):
-        training_loss = _run_epoch(model, train_loader, optimizer, device)
-        validation_loss = _run_epoch(model, validation_loader, None, device)
+        training_loss = _run_epoch(
+            model,
+            train_loader,
+            optimizer,
+            device,
+            strategy_features=arguments.strategy_features,
+            mine_count=arguments.mine_count,
+        )
+        validation_loss = _run_epoch(
+            model,
+            validation_loader,
+            None,
+            device,
+            strategy_features=arguments.strategy_features,
+            mine_count=arguments.mine_count,
+        )
         print(
             f"epoch {epoch:03d} train_loss={training_loss:.5f} "
             f"validation_loss={validation_loss:.5f} device={device.type}"
@@ -85,6 +132,8 @@ def main() -> None:
                     "model_state": model.state_dict(),
                     "width": arguments.width,
                     "residual_blocks": arguments.residual_blocks,
+                    "extra_channels": extra_channels,
+                    "mine_count": arguments.mine_count,
                     "validation_loss": validation_loss,
                 },
                 arguments.checkpoint,
@@ -107,18 +156,33 @@ def _split_seed_indices(seeds: np.ndarray, seed: int) -> tuple[list[int], list[i
 
 def _run_epoch(
     model: MineProbabilityCNN,
-    loader: DataLoader[tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
+    loader: DataLoader,
     optimizer: torch.optim.Optimizer | None,
     device: torch.device,
+    *,
+    strategy_features: bool,
+    mine_count: int,
 ) -> float:
     training = optimizer is not None
     model.train(training)
     total_loss = 0.0
     total_cells = 0.0
-    for observation, targets, mask in loader:
+    for batch in loader:
+        observation, targets, mask, *strategy_masks = batch
         observation, targets, mask = observation.to(device), targets.to(device), mask.to(device)
+        extra_features = None
+        if strategy_features:
+            safe_mask, mine_mask = (tensor.to(device) for tensor in strategy_masks)
+            flagged_count = (observation == -2).flatten(1).sum(dim=1)
+            remaining_mines = torch.full_like(flagged_count, mine_count) - flagged_count
+            extra_features = encode_strategy_features(
+                observation,
+                safe_mask,
+                mine_mask,
+                remaining_mines,
+            )
         with torch.set_grad_enabled(training):
-            logits = model(observation)
+            logits = model(observation, extra_features)
             per_cell_loss = functional.binary_cross_entropy_with_logits(
                 logits, targets, reduction="none"
             )

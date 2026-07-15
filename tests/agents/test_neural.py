@@ -6,7 +6,7 @@ import pytest
 torch = pytest.importorskip("torch")
 
 from sweeper.agents import NeuralAgent, NeuralHybridAgent  # noqa: E402
-from sweeper.models import MineProbabilityCNN  # noqa: E402
+from sweeper.models import STRATEGY_FEATURE_CHANNELS, MineProbabilityCNN  # noqa: E402
 
 
 def test_neural_agent_loads_a_checkpoint_and_selects_a_valid_action(tmp_path: Path) -> None:
@@ -44,3 +44,37 @@ def test_neural_hybrid_uses_a_learned_estimate_only_after_exact_fallback(tmp_pat
     assert decision.action in {1, 2, 3}
     assert decision.source == "neural_hybrid_neural"
     assert decision.mine_risk is not None
+
+
+def test_neural_agent_builds_strategy_features_for_a_strategy_aware_checkpoint(
+    tmp_path: Path,
+) -> None:
+    checkpoint = tmp_path / "strategy-cnn.pt"
+    model = MineProbabilityCNN(
+        width=4,
+        residual_blocks=1,
+        extra_channels=STRATEGY_FEATURE_CHANNELS,
+    )
+    torch.save(
+        {
+            "model_state": model.state_dict(),
+            "width": 4,
+            "residual_blocks": 1,
+            "extra_channels": STRATEGY_FEATURE_CHANNELS,
+        },
+        checkpoint,
+    )
+    agent = NeuralAgent(checkpoint, device="cpu")
+    observation = np.array(
+        [[1, -1], [-1, -1]],
+        dtype=np.int8,
+    )
+    info = {
+        "action_mask": np.asarray([False, True, True, True], dtype=np.bool_),
+        "remaining_mines": 1,
+    }
+
+    decision = agent.select_action(observation, info)
+
+    assert decision.action in {1, 2, 3}
+    assert decision.source == "neural"

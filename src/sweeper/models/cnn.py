@@ -34,21 +34,48 @@ class _ResidualBlock(nn.Module):
 
 
 class MineProbabilityCNN(nn.Module):
-    """Predict one mine logit per cell from a visible Minesweeper board."""
+    """Predict one mine logit per cell from visible and optional strategy features."""
 
-    def __init__(self, *, width: int = 64, residual_blocks: int = 4) -> None:
+    def __init__(
+        self,
+        *,
+        width: int = 64,
+        residual_blocks: int = 4,
+        extra_channels: int = 0,
+    ) -> None:
         super().__init__()
-        if width <= 0 or residual_blocks <= 0:
-            raise ValueError("width and residual_blocks must be positive")
+        if width <= 0 or residual_blocks <= 0 or extra_channels < 0:
+            raise ValueError(
+                "width and residual_blocks must be positive and extra_channels nonnegative"
+            )
+        self.extra_channels = extra_channels
         self.stem = nn.Sequential(
-            nn.Conv2d(CELL_STATE_CHANNELS, width, kernel_size=3, padding=1),
+            nn.Conv2d(CELL_STATE_CHANNELS + extra_channels, width, kernel_size=3, padding=1),
             nn.ReLU(),
         )
         self.blocks = nn.Sequential(*(_ResidualBlock(width) for _ in range(residual_blocks)))
         self.head = nn.Conv2d(width, 1, kernel_size=1)
 
-    def forward(self, observation: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self,
+        observation: torch.Tensor,
+        extra_features: torch.Tensor | None = None,
+    ) -> torch.Tensor:
         """Return mine logits with shape ``[batch, rows, columns]``."""
 
-        features = self.blocks(self.stem(encode_visible_state(observation)))
+        features = encode_visible_state(observation)
+        if self.extra_channels:
+            if extra_features is None:
+                raise ValueError("extra_features are required by this model")
+            if extra_features.shape != (
+                observation.shape[0],
+                self.extra_channels,
+                observation.shape[1],
+                observation.shape[2],
+            ):
+                raise ValueError("extra_features have an invalid shape")
+            features = torch.cat((features, extra_features.float()), dim=1)
+        elif extra_features is not None:
+            raise ValueError("extra_features were supplied to a visible-state-only model")
+        features = self.blocks(self.stem(features))
         return self.head(features).squeeze(1)

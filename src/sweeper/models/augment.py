@@ -6,10 +6,10 @@ import torch
 from torch.utils.data import Dataset
 
 
-class RandomSquareSymmetryDataset(Dataset[tuple[torch.Tensor, torch.Tensor, torch.Tensor]]):
+class RandomSquareSymmetryDataset(Dataset[tuple[torch.Tensor, ...]]):
     """Apply one random rotation or reflection to every sampled square board."""
 
-    def __init__(self, dataset: Dataset[tuple[torch.Tensor, torch.Tensor, torch.Tensor]]) -> None:
+    def __init__(self, dataset: Dataset[tuple[torch.Tensor, ...]]) -> None:
         if not len(dataset):
             raise ValueError("dataset must contain at least one state")
         observation, _, _ = dataset[0]
@@ -22,12 +22,10 @@ class RandomSquareSymmetryDataset(Dataset[tuple[torch.Tensor, torch.Tensor, torc
     def __len__(self) -> int:
         return len(self._dataset)
 
-    def __getitem__(self, index: int) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        observation, targets, mask = self._dataset[index]
+    def __getitem__(self, index: int) -> tuple[torch.Tensor, ...]:
+        tensors = self._dataset[index]
         symmetry = int(torch.randint(8, ()).item())
-        return tuple(
-            _apply_square_symmetry(tensor, symmetry) for tensor in (observation, targets, mask)
-        )  # type: ignore[return-value]
+        return tuple(_apply_square_symmetry(tensor, symmetry) for tensor in tensors)
 
 
 def _apply_square_symmetry(tensor: torch.Tensor, symmetry: int) -> torch.Tensor:
