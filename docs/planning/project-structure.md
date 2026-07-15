@@ -55,4 +55,4 @@ sweeper/
 
 ## implementation order
 
-The directory skeleton intentionally supports the full project without forcing premature implementation. Work begins in `src/sweeper/environment` and `tests/environment`; every other source area remains a reserved, clearly owned location until its roadmap phase starts.
+The project starts with `src/sweeper/environment` and `tests/environment`. Other source areas remain empty until their roadmap phase begins.
