@@ -139,6 +139,7 @@ button { font: inherit; }
 .demo-board-key { padding-top: 21px; border-top: 1px solid var(--line); }.demo-board-key span { display: inline-flex; align-items: center; gap: 7px; }.demo-board-key i { width: 8px; height: 8px; }.key-green { background: var(--green); }.key-red { background: var(--red); }.key-yellow { background: var(--yellow); }
 .demo-board-key kbd { padding: 2px 4px; border: 1px solid var(--line-dark); background: var(--tile); color: var(--ink); font-family: var(--font-pixel); font-size: 0.5rem; }
 .demo-decision { padding: 45px 35px; border-left: 1px solid var(--line-dark); background: #f8f2e6; }.decision-label { margin: 0; color: var(--muted); font-family: var(--font-pixel); font-size: 0.55rem; letter-spacing: 0.05em; text-transform: uppercase; }.decision-coordinate { margin-top: 30px; color: var(--green-deep); font-family: var(--font-pixel); font-size: clamp(3.6rem, 5.5vw, 5.4rem); letter-spacing: -0.1em; }
+.decision-coordinate-manual { color: var(--ink); }
 .play-cell.is-scanline.is-revealed { background-color: #f5ede0; }.play-cell.is-scanline.is-covered { background-color: #ded0bd; }
 .play-cell.is-recommended { outline: 2px solid var(--green); outline-offset: -2px; animation: demo-cell-in 230ms steps(4, end) backwards var(--cell-delay, 0ms), safe-pulse 1.7s steps(2, end) infinite calc(var(--cell-delay, 0ms) + 280ms); }
 .play-cell.is-mine-hint { outline: 2px solid var(--red); outline-offset: -2px; }
@@ -148,7 +149,14 @@ button { font: inherit; }
 .evidence-chip-lost { background: var(--red-deep); }
 .decision-risk { margin: 0; color: var(--green-deep); font-family: var(--font-pixel); font-size: 0.63rem; text-transform: uppercase; }
 .decision-risk-approximate { color: #a8842c; }
+.assist-toggle { display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 27px; border: 1px solid var(--line-dark); }
+.assist-toggle button { min-height: 38px; border: 0; background: transparent; color: var(--muted); cursor: pointer; font-family: var(--font-pixel); font-size: 0.55rem; letter-spacing: 0.05em; text-transform: uppercase; transition: background 130ms ease, color 130ms ease; }
+.assist-toggle button + button { border-left: 1px solid var(--line-dark); }
+.assist-toggle button:hover { color: var(--ink); background: rgba(230, 217, 200, 0.4); }
+.assist-toggle button.is-active { background: var(--ink); color: var(--paper); }
 .decision-actions { display: grid; grid-template-columns: 1.2fr 1fr; margin-top: 30px; border: 1px solid var(--line-dark); }
+.decision-actions-single { grid-template-columns: 1fr; }
+.decision-actions-single button:first-child { border-right: 0; }
 .decision-actions button { min-height: 46px; border: 0; background: transparent; color: var(--ink); cursor: pointer; font-size: 0.85rem; font-weight: 650; transition: background 130ms ease, color 130ms ease; }
 .decision-actions button:first-child { background: var(--ink); color: var(--paper); border-right: 1px solid var(--line-dark); }
 .decision-actions button:first-child:hover:not(:disabled) { background: var(--green-deep); }

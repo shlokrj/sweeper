@@ -23,8 +23,11 @@ const blastPixels = [
   [-14, 9, 5, "#e6c472"], [-1, 8, 8, "#dd8582"], [13, 11, 5, "#e6c472"],
 ] as const;
 
+const hiddenAnalysis = { frontier: [], provenMines: new Map<number, string>(), provenSafe: new Map<number, string>(), recommendation: null };
+
 export default function DemoPage() {
   const [game, setGame] = useState<Game>(() => newGame(0));
+  const [assist, setAssist] = useState(true);
   const [hovered, setHovered] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
 
@@ -34,7 +37,10 @@ export default function DemoPage() {
     return () => window.clearInterval(timer);
   }, [game.status]);
 
-  const analysis = useMemo(() => analyze(game.board, game.status), [game.board, game.status]);
+  const analysis = useMemo(
+    () => (assist ? analyze(game.board, game.status) : hiddenAnalysis),
+    [assist, game.board, game.status],
+  );
   const recommendation = analysis.recommendation;
   const recommendedCoordinate = recommendation ? coordinate(recommendation.index) : null;
   const flaggedCount = game.board.filter((cell) => cell.flagged).length;
@@ -138,44 +144,58 @@ export default function DemoPage() {
             </div>
           </div>
           <div className="demo-board-key">
-            <span><i className="key-green" /> proven safe</span>
-            <span><i className="key-red" /> proven mine</span>
+            {assist ? (
+              <>
+                <span><i className="key-green" /> proven safe</span>
+                <span><i className="key-red" /> proven mine</span>
+              </>
+            ) : null}
             <span>right click or <kbd>F</kbd> flags a cell</span>
           </div>
         </div>
 
         <aside className="demo-decision">
-          <p className="decision-label">next move</p>
-          <div className="decision-coordinate" key={`coordinate-${game.id}-${recommendedCoordinate ?? game.status}`}>
-            {finished ? (game.status === "won" ? ":)" : ":(") : recommendedCoordinate ?? "—"}
+          <div className="assist-toggle" role="group" aria-label="Assistant mode">
+            <button className={assist ? "is-active" : ""} onClick={() => setAssist(true)} type="button">assist</button>
+            <button className={assist ? "" : "is-active"} onClick={() => setAssist(false)} type="button">manual</button>
           </div>
-          {recommendation ? (
-            <div className="decision-verdict" key={`verdict-${game.id}-${recommendation.index}-${recommendation.label}`}>
-              <span className={`evidence-chip ${recommendation.label === "approximate" ? "evidence-chip-approximate" : ""}`}>{recommendation.label}</span>
-              <p className={`decision-risk ${recommendation.label === "approximate" ? "decision-risk-approximate" : ""}`}>{(recommendation.risk * 100).toFixed(1)}% mine risk</p>
-            </div>
-          ) : (
-            <div className="decision-verdict" key={`verdict-${game.id}-${game.status}`}>
-              <span className={`evidence-chip ${game.status === "lost" ? "evidence-chip-lost" : ""}`}>{game.status === "won" ? "board cleared" : "mine hit"}</span>
-            </div>
-          )}
-          <div className="decision-actions" role="group" aria-label="Assistant actions">
-            <button disabled={!recommendation} onClick={playRecommendation} type="button">play this move</button>
+          <p className="decision-label">{assist ? "next move" : "inspecting"}</p>
+          <div className={`decision-coordinate ${!assist && !finished ? "decision-coordinate-manual" : ""}`} key={`coordinate-${game.id}-${assist ? recommendedCoordinate ?? game.status : "manual"}`}>
+            {finished ? (game.status === "won" ? ":)" : ":(") : assist ? recommendedCoordinate ?? "+" : hovered ?? "+"}
+          </div>
+          {assist ? (
+            recommendation ? (
+              <div className="decision-verdict" key={`verdict-${game.id}-${recommendation.index}-${recommendation.label}`}>
+                <span className={`evidence-chip ${recommendation.label === "approximate" ? "evidence-chip-approximate" : ""}`}>{recommendation.label}</span>
+                <p className={`decision-risk ${recommendation.label === "approximate" ? "decision-risk-approximate" : ""}`}>{(recommendation.risk * 100).toFixed(1)}% mine risk</p>
+              </div>
+            ) : (
+              <div className="decision-verdict" key={`verdict-${game.id}-${game.status}`}>
+                <span className={`evidence-chip ${game.status === "lost" ? "evidence-chip-lost" : ""}`}>{game.status === "won" ? "board cleared" : "mine hit"}</span>
+              </div>
+            )
+          ) : null}
+          <div className={`decision-actions ${assist ? "" : "decision-actions-single"}`} role="group" aria-label="Assistant actions">
+            {assist ? <button disabled={!recommendation} onClick={playRecommendation} type="button">play this move</button> : null}
             <button onClick={reset} type="button">new board <span aria-hidden="true">↻</span></button>
           </div>
-          <div className="decision-evidence" key={`evidence-${game.id}-${recommendation?.index ?? game.status}-${game.moves}`}>
+          <div className="decision-evidence" key={`evidence-${game.id}-${assist ? `${recommendation?.index ?? game.status}-${game.moves}` : "manual"}`}>
             <p>
-              {recommendation
-                ? recommendation.evidence
-                : game.status === "won"
-                  ? "Every safe cell is revealed and every mine is flagged."
-                  : "A mine ended this run. The board stays open for inspection."}
+              {!assist
+                ? "Assist is off. Proofs and mine risk stay hidden while you play."
+                : recommendation
+                  ? recommendation.evidence
+                  : game.status === "won"
+                    ? "Every safe cell is revealed and every mine is flagged."
+                    : "A mine ended this run. The board stays open for inspection."}
             </p>
-            <dl>
-              <div><dt>method</dt><dd>{recommendation ? recommendation.method : "game over"}</dd></div>
-              <div><dt>frontier</dt><dd>{analysis.frontier.length} {analysis.frontier.length === 1 ? "candidate" : "candidates"}</dd></div>
-              <div><dt>proven</dt><dd>{analysis.provenSafe.size} safe · {analysis.provenMines.size} {analysis.provenMines.size === 1 ? "mine" : "mines"}</dd></div>
-            </dl>
+            {assist ? (
+              <dl>
+                <div><dt>method</dt><dd>{recommendation ? recommendation.method : "game over"}</dd></div>
+                <div><dt>frontier</dt><dd>{analysis.frontier.length} {analysis.frontier.length === 1 ? "candidate" : "candidates"}</dd></div>
+                <div><dt>proven</dt><dd>{analysis.provenSafe.size} safe · {analysis.provenMines.size} {analysis.provenMines.size === 1 ? "mine" : "mines"}</dd></div>
+              </dl>
+            ) : null}
           </div>
         </aside>
       </section>
