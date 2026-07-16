@@ -1,7 +1,7 @@
 export const PRESETS = {
-  easy: { columns: 9, id: "easy", label: "Easy", mines: 10, rows: 9 },
-  medium: { columns: 18, id: "medium", label: "Medium", mines: 40, rows: 14 },
-  hard: { columns: 24, id: "hard", label: "Hard", mines: 99, rows: 20 },
+  easy: { breakMax: 20, breakMin: 6, columns: 9, id: "easy", label: "Easy", mines: 10, rows: 9 },
+  medium: { breakMax: 70, breakMin: 10, columns: 18, id: "medium", label: "Medium", mines: 40, rows: 14 },
+  hard: { breakMax: 130, breakMin: 12, columns: 24, id: "hard", label: "Hard", mines: 99, rows: 20 },
 } as const;
 
 export type PresetId = keyof typeof PRESETS;
@@ -73,18 +73,47 @@ export function newGame(id: number, preset: BoardPreset = PRESETS.easy): Game {
   return { board: emptyBoard(preset), firstReveal: true, id, moves: 0, preset, status: "ready" };
 }
 
+/** Counts how many cells the opening flood fill would reveal. */
+function openingSize(mines: Set<number>, safeIndex: number, preset: BoardPreset): number {
+  const queue = [safeIndex];
+  const visited = new Set<number>();
+  while (queue.length) {
+    const index = queue.shift();
+    if (index === undefined || visited.has(index) || mines.has(index)) continue;
+    visited.add(index);
+    if (neighbors(index, preset).every((neighbor) => !mines.has(neighbor))) queue.push(...neighbors(index, preset));
+  }
+  return visited.size;
+}
+
 /**
  * Modern first-click rule, as in Google Minesweeper and Windows Vista and
  * later: the board is generated on the opening reveal and mines avoid the
  * clicked cell plus its whole neighborhood, so the first click always
- * lands on a zero and breaks the board open.
+ * lands on a zero and breaks the board open. Boards reroll until the
+ * opening fits the preset's break bounds, so small boards break small and
+ * large boards break large, with the closest attempt as a fallback.
  */
 function placeMines(board: Cell[], safeIndex: number, preset: BoardPreset): Cell[] {
   const safeZone = new Set([safeIndex, ...neighbors(safeIndex, preset)]);
-  const mines = new Set<number>();
-  while (mines.size < preset.mines) {
-    const candidate = Math.floor(Math.random() * board.length);
-    if (!safeZone.has(candidate)) mines.add(candidate);
+  let mines = new Set<number>();
+  let fallbackDistance = Infinity;
+  for (let attempt = 0; attempt < 220; attempt += 1) {
+    const candidateMines = new Set<number>();
+    while (candidateMines.size < preset.mines) {
+      const candidate = Math.floor(Math.random() * board.length);
+      if (!safeZone.has(candidate)) candidateMines.add(candidate);
+    }
+    const size = openingSize(candidateMines, safeIndex, preset);
+    if (size >= preset.breakMin && size <= preset.breakMax) {
+      mines = candidateMines;
+      break;
+    }
+    const distance = size < preset.breakMin ? preset.breakMin - size : size - preset.breakMax;
+    if (distance < fallbackDistance) {
+      fallbackDistance = distance;
+      mines = candidateMines;
+    }
   }
   const placed = board.map((cell, index) => ({ ...cell, flagged: cell.flagged, mine: mines.has(index) }));
   return placed.map((cell, index) => ({
