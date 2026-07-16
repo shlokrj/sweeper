@@ -41,10 +41,12 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.match(navigation, /Benchmarks/);
   assert.doesNotMatch(navigation, /href="\/play"/);
   assert.match(engine, /safeZone/);
-  assert.match(engine, /easy: \{ columns: 9/);
-  assert.match(engine, /medium: \{ columns: 18/);
-  assert.match(engine, /hard: \{ columns: 24/);
+  assert.match(engine, /easy: \{[^}]*columns: 9/);
+  assert.match(engine, /medium: \{[^}]*columns: 18/);
+  assert.match(engine, /hard: \{[^}]*columns: 24/);
   assert.match(engine, /mines: 99/);
+  assert.match(engine, /breakMax/);
+  assert.match(engine, /openingSize/);
   assert.match(home, /<span>Where logic<\/span><span>meets chance\.<\/span>/);
   assert.match(styles, /\.hero-board-shell \{ position: absolute; top: 50%; right: 0; width: min\(100%, 46vw, 720px\);/);
   assert.match(styles, /@media \(max-width: 850px\)/);
