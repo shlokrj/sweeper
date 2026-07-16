@@ -73,11 +73,18 @@ export function newGame(id: number, preset: BoardPreset = PRESETS.easy): Game {
   return { board: emptyBoard(preset), firstReveal: true, id, moves: 0, preset, status: "ready" };
 }
 
+/**
+ * Modern first-click rule, as in Google Minesweeper and Windows Vista and
+ * later: the board is generated on the opening reveal and mines avoid the
+ * clicked cell plus its whole neighborhood, so the first click always
+ * lands on a zero and breaks the board open.
+ */
 function placeMines(board: Cell[], safeIndex: number, preset: BoardPreset): Cell[] {
+  const safeZone = new Set([safeIndex, ...neighbors(safeIndex, preset)]);
   const mines = new Set<number>();
   while (mines.size < preset.mines) {
     const candidate = Math.floor(Math.random() * board.length);
-    if (candidate !== safeIndex) mines.add(candidate);
+    if (!safeZone.has(candidate)) mines.add(candidate);
   }
   const placed = board.map((cell, index) => ({ ...cell, flagged: cell.flagged, mine: mines.has(index) }));
   return placed.map((cell, index) => ({
@@ -205,7 +212,7 @@ export function analyze(board: Cell[], status: Status, preset: BoardPreset): Ana
       provenMines,
       provenSafe,
       recommendation: {
-        evidence: "The opening reveal is never a mine. Starting near the center touches the most cells.",
+        evidence: "The board is generated on the first reveal, which always lands on a zero and breaks the board open.",
         index: centerRow * preset.columns + centerColumn,
         label: "proven",
         method: "safe first reveal",
