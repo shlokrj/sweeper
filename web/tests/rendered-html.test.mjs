@@ -20,8 +20,9 @@ test("server-renders the light Minesweeper home page", async () => {
 });
 
 test("the navigation, playable demo, and benchmark routes remain available", async () => {
-  const [brandMark, navigation, engine, home, styles, demo, benchmarks] = await Promise.all([
+  const [brandMark, heartMark, navigation, engine, home, styles, demo, benchmarks] = await Promise.all([
     readFile(new URL("../app/components/brand-mark.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/heart-mark.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/site-nav.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/minesweeper.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
@@ -36,6 +37,7 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.match(brandMark, /blastPixels/);
   assert.match(brandMark, /document\.body\.append\(burst\)/);
   assert.match(brandMark, /onClick=\{explode\}/);
+  assert.match(heartMark, /className="heart-mark"/);
   assert.match(navigation, /Home/);
   assert.match(navigation, /Demo/);
   assert.match(navigation, /Benchmarks/);
@@ -48,7 +50,11 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.match(engine, /breakMax/);
   assert.match(engine, /openingSize/);
   assert.match(home, /<span>Where logic<\/span><span>meets chance\.<\/span>/);
+  assert.match(home, /made by shlok\.fyi/);
+  assert.match(home, /HeartMark/);
   assert.match(styles, /\.hero-board-shell \{ position: absolute; top: 50%; right: 0; width: min\(100%, 46vw, 720px\);/);
+  assert.match(styles, /@keyframes pixel-heartbeat/);
+  assert.match(styles, /\.made-by \{ display: inline-flex/);
   assert.match(styles, /@media \(max-width: 850px\)/);
   assert.match(demo, /manual/);
   assert.match(demo, /useState<PlayMode>\("assisted"\)/);
