@@ -5,10 +5,12 @@ function svgUrl(svg: string): string {
 /**
  * A sporadic erosion mask. A roughly 30-degree front moves down and right,
  * then breaks into coarse clusters instead of ending as a clean diagonal.
+ * Fragments shrink with distance from the front: chunky bites at the edge,
+ * fine loose pixels once the board has mostly dissolved.
  */
-export function ditherMask(size = 64, seed = 7): string {
-  const hash = (x: number, y: number) => {
-    let h = (x * 374761393 + y * 668265263 + seed * 1442695041) >>> 0;
+export function ditherMask(size = 96, seed = 7): string {
+  const hash = (x: number, y: number, salt = 0) => {
+    let h = (x * 374761393 + y * 668265263 + (seed + salt * 97) * 1442695041) >>> 0;
     h = ((h ^ (h >>> 13)) * 1274126177) >>> 0;
     return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
   };
@@ -25,12 +27,21 @@ export function ditherMask(size = 64, seed = 7): string {
     return mix(top, bottom, yAmount);
   };
 
-  const visible = (x: number, y: number) => {
+  const densityAt = (x: number, y: number) => {
     const progress = (x + 0.5) / size;
     const cut = 0.12 + ((y + 0.5) / size) * 0.5;
-    const clusters = (noise(x, y, 12) - 0.5) * 0.24 + (noise(x, y, 4) - 0.5) * 0.08;
-    const density = Math.max(0, Math.min(1, (progress - cut) / 0.19 + clusters));
-    return hash(x, y) < Math.pow(density, 1.15);
+    const clusters = (noise(x, y, 18) - 0.5) * 0.24 + (noise(x, y, 6) - 0.5) * 0.08;
+    return Math.max(0, Math.min(1, (progress - cut) / 0.19 + clusters));
+  };
+  const visible = (x: number, y: number) => {
+    const density = densityAt(x, y);
+    if (density >= 1) return true;
+    if (density <= 0) return false;
+    const block = density > 0.55 ? 6 : density > 0.28 ? 3 : 1;
+    const blockX = Math.floor(x / block);
+    const blockY = Math.floor(y / block);
+    const center = Math.max(0, Math.min(1, densityAt(blockX * block + block / 2, blockY * block + block / 2)));
+    return hash(blockX, blockY, block) < Math.pow(center, 1.15);
   };
   const rows: string[] = [];
   for (let y = 0; y < size; y += 1) {
