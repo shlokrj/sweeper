@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { FlagMark } from "./components/flag-mark";
 import { SiteNav } from "./components/site-nav";
-import { ditherMask } from "./components/pixel-texture";
+import { ditherMask, erosionEdge } from "./components/pixel-texture";
 
 type HeroCell = "covered" | "clear" | "flag" | "one" | "two" | "three";
 
@@ -40,24 +40,24 @@ type DebrisParticle = {
 
 const boardDebris: DebrisParticle[] = (() => {
   const colors = ["#dd8582", "#84ad83", "#84b3cf", "#cbbba5"];
+  const edge = erosionEdge(17);
   let state = 41;
   const next = () => {
     state = (state * 1664525 + 1013904223) >>> 0;
     return state / 4294967296;
   };
 
-  return Array.from({ length: 68 }, (_, index) => {
-    const y = Math.max(2, Math.min(98, 3 + (index / 67) * 94 + (next() - 0.5) * 8));
-    const cut = 17 + y * 0.48;
-    const distance = index % 11 === 0 ? 24 + next() * 16 : 4 + Math.pow(next(), 1.65) * 24;
-    const x = cut - distance;
+  return Array.from({ length: 42 }, (_, index) => {
+    const y = Math.max(2, Math.min(98, 3 + (index / 41) * 94 + (next() - 0.5) * 7));
+    const spread = index % 8 === 0 ? 8 + next() * 9 : 1 + Math.pow(next(), 1.7) * 7;
+    const x = Math.max(0, edge(y / 100) * 100 - spread);
     return {
       color: colors[Math.floor(next() * colors.length)],
-      delay: 120 + index * 7 + Math.floor(next() * 80),
-      driftX: -5 - Math.floor(next() * 22),
-      driftY: -10 + Math.floor(next() * 20),
-      opacity: 0.25 + next() * 0.42,
-      size: Math.max(2, Math.round(10 - distance * 0.2 + next() * 2)),
+      delay: 120 + index * 9 + Math.floor(next() * 80),
+      driftX: -4 - Math.floor(next() * 14),
+      driftY: -7 + Math.floor(next() * 14),
+      opacity: 0.5 + next() * 0.42,
+      size: Math.max(2, Math.round(8 - spread * 0.45 + next() * 2)),
       x,
       y,
     };

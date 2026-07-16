@@ -2,19 +2,12 @@ function svgUrl(svg: string): string {
   return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
-/**
- * A sporadic erosion mask. A roughly 30-degree front moves down and right,
- * then breaks into coarse clusters instead of ending as a clean diagonal.
- * Fragments shrink with distance from the front: chunky bites at the edge,
- * fine loose pixels once the board has mostly dissolved.
- */
-export function ditherMask(size = 96, seed = 7): string {
+function makeRandom(seed: number) {
   const hash = (x: number, y: number, salt = 0) => {
     let h = (x * 374761393 + y * 668265263 + (seed + salt * 97) * 1442695041) >>> 0;
     h = ((h ^ (h >>> 13)) * 1274126177) >>> 0;
     return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
   };
-
   const smooth = (value: number) => value * value * (3 - 2 * value);
   const mix = (start: number, end: number, amount: number) => start + (end - start) * amount;
   const noise = (x: number, y: number, scale: number) => {
@@ -26,22 +19,42 @@ export function ditherMask(size = 96, seed = 7): string {
     const bottom = mix(hash(gridX, gridY + 1), hash(gridX + 1, gridY + 1), xAmount);
     return mix(top, bottom, yAmount);
   };
+  return { hash, noise };
+}
 
-  const densityAt = (x: number, y: number) => {
-    const progress = (x + 0.5) / size;
-    const cut = 0.12 + ((y + 0.5) / size) * 0.5;
-    const clusters = (noise(x, y, 18) - 0.5) * 0.24 + (noise(x, y, 6) - 0.5) * 0.08;
-    return Math.max(0, Math.min(1, (progress - cut) / 0.19 + clusters));
+/**
+ * The x position of the erosion front, 0..1, for a given y in 0..1. A slow
+ * undulation plus fine jitter keeps the cut sporadic instead of a straight
+ * slice. The mask and the loose debris share this line.
+ */
+export function erosionEdge(seed = 7): (y: number) => number {
+  const { noise } = makeRandom(seed);
+  return (y: number) => {
+    const gridY = y * 96;
+    return 0.16 + y * 0.46 + (noise(11, gridY, 26) - 0.5) * 0.3 + (noise(53, gridY, 9) - 0.5) * 0.09;
   };
+}
+
+/**
+ * An erosion mask that keeps the board solid up to the cut and spends all
+ * of its pixelation in a narrow band on the edge: chunky bites right at
+ * the front, a sparse fringe of smaller strays just beyond, then nothing.
+ */
+export function ditherMask(size = 96, seed = 7): string {
+  const { hash } = makeRandom(seed);
+  const edge = erosionEdge(seed);
+  const bandIn = 0.045;
+  const bandOut = 0.06;
   const visible = (x: number, y: number) => {
-    const density = densityAt(x, y);
-    if (density >= 1) return true;
-    if (density <= 0) return false;
-    const block = density > 0.55 ? 6 : density > 0.28 ? 3 : 1;
+    const distance = (x + 0.5) / size - edge((y + 0.5) / size);
+    if (distance >= bandIn) return true;
+    if (distance <= -bandOut) return false;
+    const block = distance > -0.015 ? 3 : 2;
     const blockX = Math.floor(x / block);
     const blockY = Math.floor(y / block);
-    const center = Math.max(0, Math.min(1, densityAt(blockX * block + block / 2, blockY * block + block / 2)));
-    return hash(blockX, blockY, block) < Math.pow(center, 1.15);
+    const centered = (blockX * block + block / 2) / size - edge((blockY * block + block / 2) / size);
+    const chance = Math.max(0, Math.min(1, (centered + bandOut) / (bandIn + bandOut)));
+    return hash(blockX, blockY, block) < Math.pow(chance, 1.35);
   };
   const rows: string[] = [];
   for (let y = 0; y < size; y += 1) {
