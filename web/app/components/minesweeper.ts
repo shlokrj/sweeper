@@ -1,8 +1,11 @@
-export const ROWS = 9;
-export const COLUMNS = 9;
-export const MINE_COUNT = 10;
-export const CELL_COUNT = ROWS * COLUMNS;
+export const PRESETS = {
+  beginner: { columns: 9, id: "beginner", label: "Beginner", mines: 10, rows: 9 },
+  intermediate: { columns: 16, id: "intermediate", label: "Intermediate", mines: 40, rows: 16 },
+  expert: { columns: 30, id: "expert", label: "Expert", mines: 99, rows: 16 },
+} as const;
 
+export type PresetId = keyof typeof PRESETS;
+export type BoardPreset = (typeof PRESETS)[PresetId];
 export type Status = "ready" | "playing" | "won" | "lost";
 
 export type Cell = {
@@ -19,32 +22,44 @@ export type Game = {
   firstReveal: boolean;
   id: number;
   moves: number;
+  preset: BoardPreset;
   status: Status;
 };
 
-export function coordinate(index: number): string {
-  return `${String.fromCharCode(65 + (index % COLUMNS))}${Math.floor(index / COLUMNS) + 1}`;
+export function columnLabel(index: number): string {
+  let value = index + 1;
+  let label = "";
+  while (value > 0) {
+    const remainder = (value - 1) % 26;
+    label = String.fromCharCode(65 + remainder) + label;
+    value = Math.floor((value - 1) / 26);
+  }
+  return label;
 }
 
-export function neighbors(index: number): number[] {
-  const row = Math.floor(index / COLUMNS);
-  const column = index % COLUMNS;
+export function coordinate(index: number, preset: BoardPreset): string {
+  return `${columnLabel(index % preset.columns)}${Math.floor(index / preset.columns) + 1}`;
+}
+
+export function neighbors(index: number, preset: BoardPreset): number[] {
+  const row = Math.floor(index / preset.columns);
+  const column = index % preset.columns;
   const result: number[] = [];
   for (let rowOffset = -1; rowOffset <= 1; rowOffset += 1) {
     for (let columnOffset = -1; columnOffset <= 1; columnOffset += 1) {
       if (rowOffset === 0 && columnOffset === 0) continue;
       const nextRow = row + rowOffset;
       const nextColumn = column + columnOffset;
-      if (nextRow >= 0 && nextRow < ROWS && nextColumn >= 0 && nextColumn < COLUMNS) {
-        result.push(nextRow * COLUMNS + nextColumn);
+      if (nextRow >= 0 && nextRow < preset.rows && nextColumn >= 0 && nextColumn < preset.columns) {
+        result.push(nextRow * preset.columns + nextColumn);
       }
     }
   }
   return result;
 }
 
-function emptyBoard(): Cell[] {
-  return Array.from({ length: CELL_COUNT }, () => ({
+function emptyBoard(preset: BoardPreset): Cell[] {
+  return Array.from({ length: preset.rows * preset.columns }, () => ({
     adjacent: 0,
     exploded: false,
     flagged: false,
@@ -54,8 +69,8 @@ function emptyBoard(): Cell[] {
   }));
 }
 
-export function newGame(id: number): Game {
-  return { board: emptyBoard(), firstReveal: true, id, moves: 0, status: "ready" };
+export function newGame(id: number, preset: BoardPreset = PRESETS.beginner): Game {
+  return { board: emptyBoard(preset), firstReveal: true, id, moves: 0, preset, status: "ready" };
 }
 
 /**
@@ -63,20 +78,20 @@ export function newGame(id: number): Game {
  * only the clicked cell itself is excluded. The first click is never a
  * mine, but it opens a cascade only when it happens to land on a zero.
  */
-function placeMines(board: Cell[], safeIndex: number): Cell[] {
+function placeMines(board: Cell[], safeIndex: number, preset: BoardPreset): Cell[] {
   const mines = new Set<number>();
-  while (mines.size < MINE_COUNT) {
-    const candidate = Math.floor(Math.random() * CELL_COUNT);
+  while (mines.size < preset.mines) {
+    const candidate = Math.floor(Math.random() * board.length);
     if (candidate !== safeIndex) mines.add(candidate);
   }
   const placed = board.map((cell, index) => ({ ...cell, flagged: cell.flagged, mine: mines.has(index) }));
   return placed.map((cell, index) => ({
     ...cell,
-    adjacent: cell.mine ? 0 : neighbors(index).filter((neighbor) => placed[neighbor].mine).length,
+    adjacent: cell.mine ? 0 : neighbors(index, preset).filter((neighbor) => placed[neighbor].mine).length,
   }));
 }
 
-function revealArea(board: Cell[], startIndex: number): Cell[] {
+function revealArea(board: Cell[], startIndex: number, preset: BoardPreset): Cell[] {
   const next = board.map((cell) => ({ ...cell }));
   const queue = [startIndex];
   const visited = new Set<number>();
@@ -89,7 +104,7 @@ function revealArea(board: Cell[], startIndex: number): Cell[] {
     if (cell.flagged && index !== startIndex) continue;
     cell.flagged = false;
     cell.revealed = true;
-    if (cell.adjacent === 0) queue.push(...neighbors(index));
+    if (cell.adjacent === 0) queue.push(...neighbors(index, preset));
   }
   return next;
 }
@@ -121,13 +136,13 @@ function settle(game: Game, board: Cell[]): Game {
 
 export function revealCell(game: Game, index: number): Game {
   if (game.status === "won" || game.status === "lost") return game;
-  const source = game.firstReveal ? placeMines(game.board, index) : game.board;
+  const source = game.firstReveal ? placeMines(game.board, index, game.preset) : game.board;
   const cell = source[index];
   if (cell.flagged || cell.revealed) return game;
   if (cell.mine) {
     return { ...game, board: revealAllMines(source, index), firstReveal: false, moves: game.moves + 1, status: "lost" };
   }
-  return settle(game, revealArea(source, index));
+  return settle(game, revealArea(source, index, game.preset));
 }
 
 /**
@@ -138,7 +153,7 @@ export function chordCell(game: Game, index: number): Game {
   if (game.status !== "playing") return game;
   const cell = game.board[index];
   if (!cell.revealed || cell.adjacent === 0) return game;
-  const around = neighbors(index);
+  const around = neighbors(index, game.preset);
   const flagged = around.filter((neighbor) => game.board[neighbor].flagged).length;
   const targets = around.filter((neighbor) => !game.board[neighbor].flagged && !game.board[neighbor].revealed);
   if (flagged !== cell.adjacent || targets.length === 0) return game;
@@ -148,7 +163,7 @@ export function chordCell(game: Game, index: number): Game {
     return { ...game, board: revealAllMines(game.board, hitMine), moves: game.moves + 1, status: "lost" };
   }
   let board = game.board;
-  for (const target of targets) board = revealArea(board, target);
+  for (const target of targets) board = revealArea(board, target, game.preset);
   return settle(game, board);
 }
 
@@ -162,8 +177,7 @@ export function toggleFlag(game: Game, index: number): Game {
   return { ...game, board };
 }
 
-/* The solver reads only visible state: revealed clue numbers and which
-   cells remain covered. Player flags and hidden mines never inform it. */
+/* The solver reads only visible state: revealed clue numbers and covered cells. */
 
 type Constraint = { cells: number[]; count: number; source: number };
 
@@ -180,23 +194,24 @@ export type Analysis = {
   } | null;
 };
 
-function clue(board: Cell[], index: number): string {
-  return `${coordinate(index)}=${board[index].adjacent}`;
+function clue(board: Cell[], index: number, preset: BoardPreset): string {
+  return `${coordinate(index, preset)}=${board[index].adjacent}`;
 }
 
-export function analyze(board: Cell[], status: Status): Analysis {
+export function analyze(board: Cell[], status: Status, preset: BoardPreset): Analysis {
   const provenSafe = new Map<number, string>();
   const provenMines = new Map<number, string>();
 
   if (status === "ready") {
-    const center = Math.floor(CELL_COUNT / 2);
+    const centerRow = Math.floor(preset.rows / 2);
+    const centerColumn = Math.floor(preset.columns / 2);
     return {
       frontier: [],
       provenMines,
       provenSafe,
       recommendation: {
-        evidence: "The opening reveal is never a mine, though it only cascades when it lands on a zero. A center start touches the most cells.",
-        index: center,
+        evidence: "The opening reveal is never a mine. Starting near the center touches the most cells.",
+        index: centerRow * preset.columns + centerColumn,
         label: "proven",
         method: "safe first reveal",
         risk: 0,
@@ -209,10 +224,10 @@ export function analyze(board: Cell[], status: Status): Analysis {
 
   const covered = board.map((cell, index) => (!cell.revealed ? index : -1)).filter((index) => index >= 0);
   const constraints: Constraint[] = [];
-  for (let index = 0; index < CELL_COUNT; index += 1) {
+  for (let index = 0; index < board.length; index += 1) {
     const cell = board[index];
     if (!cell.revealed || cell.adjacent === 0) continue;
-    const cells = neighbors(index).filter((neighbor) => !board[neighbor].revealed);
+    const cells = neighbors(index, preset).filter((neighbor) => !board[neighbor].revealed);
     if (cells.length > 0) constraints.push({ cells, count: cell.adjacent, source: index });
   }
   const frontier = [...new Set(constraints.flatMap((constraint) => constraint.cells))].sort((a, b) => a - b);
@@ -226,10 +241,10 @@ export function analyze(board: Cell[], status: Status): Analysis {
       const remaining = constraint.count - found;
       if (unknown.length === 0) continue;
       if (remaining === 0) {
-        for (const cell of unknown) provenSafe.set(cell, `${clue(board, constraint.source)} is already satisfied, so ${coordinate(cell)} cannot hold a mine.`);
+        for (const cell of unknown) provenSafe.set(cell, `${clue(board, constraint.source, preset)} is satisfied, so ${coordinate(cell, preset)} cannot hold a mine.`);
         changed = true;
       } else if (remaining === unknown.length) {
-        for (const cell of unknown) provenMines.set(cell, `${clue(board, constraint.source)} forces every remaining neighbor to be a mine, including ${coordinate(cell)}.`);
+        for (const cell of unknown) provenMines.set(cell, `${clue(board, constraint.source, preset)} forces a mine at ${coordinate(cell, preset)}.`);
         changed = true;
       }
     }
@@ -246,14 +261,14 @@ export function analyze(board: Cell[], status: Status): Analysis {
         if (largeRemaining - smallRemaining === 0) {
           for (const cell of rest) {
             if (!provenSafe.has(cell)) {
-              provenSafe.set(cell, `${clue(board, small.source)} accounts for every mine ${clue(board, large.source)} needs, so ${coordinate(cell)} is safe.`);
+              provenSafe.set(cell, `${clue(board, small.source, preset)} accounts for every mine ${clue(board, large.source, preset)} needs, so ${coordinate(cell, preset)} is safe.`);
               changed = true;
             }
           }
         } else if (largeRemaining - smallRemaining === rest.length) {
           for (const cell of rest) {
             if (!provenMines.has(cell)) {
-              provenMines.set(cell, `Comparing ${clue(board, small.source)} with ${clue(board, large.source)} forces a mine at ${coordinate(cell)}.`);
+              provenMines.set(cell, `Comparing ${clue(board, small.source, preset)} with ${clue(board, large.source, preset)} forces a mine at ${coordinate(cell, preset)}.`);
               changed = true;
             }
           }
@@ -275,7 +290,7 @@ export function analyze(board: Cell[], status: Status): Analysis {
 
   const knownMines = provenMines.size;
   const unknownCovered = covered.filter((cell) => !provenMines.has(cell));
-  const baseline = unknownCovered.length > 0 ? Math.max(0, MINE_COUNT - knownMines) / unknownCovered.length : 1;
+  const baseline = unknownCovered.length > 0 ? Math.max(0, preset.mines - knownMines) / unknownCovered.length : 1;
   let best: { index: number; risk: number } | null = null;
   for (const cell of unknownCovered) {
     let risk = baseline;
@@ -295,8 +310,8 @@ export function analyze(board: Cell[], status: Status): Analysis {
     provenSafe,
     recommendation: {
       evidence: onFrontier
-        ? `No proof exists on this board. ${coordinate(best.index)} carries the lowest bound on mine risk along the frontier.`
-        : `No proof exists on this board. ${coordinate(best.index)} sits away from every constraint, so only the global mine density applies.`,
+        ? `No proof exists. ${coordinate(best.index, preset)} carries the lowest bound on mine risk along the frontier.`
+        : `No proof exists. ${coordinate(best.index, preset)} is outside every constraint, so only the global mine density applies.`,
       index: best.index,
       label: "approximate",
       method: "local risk estimate",
