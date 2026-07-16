@@ -2,6 +2,8 @@
 
 import { type CSSProperties, type KeyboardEvent, type MouseEvent, useEffect, useMemo, useState } from "react";
 import { FlagMark } from "../components/flag-mark";
+import { LockMark } from "../components/lock-mark";
+import { MineMark } from "../components/mine-mark";
 import { SiteNav } from "../components/site-nav";
 import {
   PRESETS,
@@ -29,6 +31,7 @@ const hiddenAnalysis = { frontier: [], provenMines: new Map<number, string>(), p
 export default function DemoPage() {
   const [game, setGame] = useState<Game>(() => newGame(0));
   const [mode, setMode] = useState<PlayMode>("assisted");
+  const [autoRunning, setAutoRunning] = useState(false);
   const [hovered, setHovered] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [autoDelay, setAutoDelay] = useState(620);
@@ -54,24 +57,34 @@ export default function DemoPage() {
   const activeColumn = activeCoordinate.match(/[A-Z]+/)?.[0] ?? "";
   const activeRow = activeCoordinate.match(/\d+/)?.[0] ?? "";
   const finished = game.status === "won" || game.status === "lost";
+  const locked = mode === "auto" && !finished;
   const boardStyle = {
     "--board-columns": game.preset.columns,
     "--board-rows": game.preset.rows,
+    "--board-aspect": game.preset.columns / game.preset.rows,
   } as CSSProperties;
 
   function reset() {
     setGame((current) => newGame(current.id + 1, current.preset));
+    setAutoRunning(false);
     setElapsed(0);
     setHovered(null);
   }
 
   function selectPreset(presetId: PresetId) {
     setGame((current) => newGame(current.id + 1, PRESETS[presetId]));
+    setAutoRunning(false);
     setElapsed(0);
     setHovered(null);
   }
 
+  function selectMode(nextMode: PlayMode) {
+    setMode(nextMode);
+    setAutoRunning(false);
+  }
+
   function handleReveal(index: number) {
+    if (locked) return;
     setGame((current) => {
       const cell = current.board[index];
       return cell.revealed ? chordCell(current, index) : revealCell(current, index);
@@ -80,11 +93,12 @@ export default function DemoPage() {
 
   function handleContextMenu(event: MouseEvent<HTMLButtonElement>, index: number) {
     event.preventDefault();
+    if (locked) return;
     setGame((current) => toggleFlag(current, index));
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLButtonElement>, index: number) {
-    if (event.key.toLowerCase() !== "f") return;
+    if (event.key.toLowerCase() !== "f" || locked) return;
     event.preventDefault();
     setGame((current) => toggleFlag(current, index));
   }
@@ -104,10 +118,10 @@ export default function DemoPage() {
   }
 
   useEffect(() => {
-    if (mode !== "auto" || finished) return undefined;
+    if (mode !== "auto" || !autoRunning || finished) return undefined;
     const timer = window.setTimeout(playAutoStep, autoDelay);
     return () => window.clearTimeout(timer);
-  }, [autoDelay, finished, game.board, game.id, mode]);
+  }, [autoDelay, autoRunning, finished, game.board, game.id, mode]);
 
   return (
     <main className="site-page inner-page">
@@ -140,8 +154,7 @@ export default function DemoPage() {
               );
             })}
           </div>
-          <div className="demo-board-scroll">
-            <div className={`board-frame is-${game.preset.id}`} style={boardStyle}>
+          <div className={`board-frame is-${game.preset.id}`} style={boardStyle}>
               <div className="frame-cols" aria-hidden="true">
                 {columnLabels.map((column) => (
                   <span className={activeColumn === column ? "is-live" : ""} key={column}>{column}</span>
@@ -175,15 +188,23 @@ export default function DemoPage() {
                         style={{ "--cell-delay": `${80 + (rowIndex + columnIndex) * 18}ms` } as CSSProperties}
                         type="button"
                       >
-                        {cell.exploded ? <><span className="mine-symbol">✹</span><span className="play-explosion" aria-hidden="true">{blastPixels.map(([x, y, size, color], pixelIndex) => <i key={pixelIndex} style={{ "--blast-color": color, "--blast-size": `${size}px`, "--blast-x": `${x}px`, "--blast-y": `${y}px` } as CSSProperties} />)}</span></> : null}
+                        {cell.exploded ? <><MineMark /><span className="play-explosion" aria-hidden="true">{blastPixels.map(([x, y, size, color], pixelIndex) => <i key={pixelIndex} style={{ "--blast-color": color, "--blast-size": `${size}px`, "--blast-x": `${x}px`, "--blast-y": `${y}px` } as CSSProperties} />)}</span></> : null}
                         {!cell.exploded && cell.wrongFlag ? <span className="wrong-flag">×</span> : null}
                         {!cell.exploded && !cell.wrongFlag && cell.flagged ? <FlagMark compact /> : null}
-                        {!cell.exploded && !cell.wrongFlag && !cell.flagged && cell.revealed && cell.mine ? <span className="mine-symbol">✹</span> : null}
+                        {!cell.exploded && !cell.wrongFlag && !cell.flagged && cell.revealed && cell.mine ? <MineMark /> : null}
                         {!cell.exploded && !cell.wrongFlag && !cell.flagged && cell.revealed && !cell.mine && cell.adjacent > 0 ? cell.adjacent : null}
                       </button>
                     );
                   })}
                 </div>
+
+                {locked ? (
+                  <div className="board-lock" role="status">
+                    <LockMark />
+                    <span>auto has the board</span>
+                    <em>switch to manual or assisted to play</em>
+                  </div>
+                ) : null}
 
                 {finished ? (
                   <div className={`play-result is-${game.status}`} role="status">
@@ -194,7 +215,6 @@ export default function DemoPage() {
                 ) : null}
               </div>
             </div>
-          </div>
           <div className="demo-board-key">
             {showAssistance ? <><span><i className="key-green" /> proven safe</span><span><i className="key-red" /> proven mine</span></> : null}
             <span>right click or <kbd>F</kbd> flags a cell</span>
@@ -204,7 +224,7 @@ export default function DemoPage() {
         <aside className="demo-decision">
           <div className="mode-selector" role="group" aria-label="Demo mode">
             {(["manual", "assisted", "auto"] as PlayMode[]).map((option) => (
-              <button className={mode === option ? "is-active" : ""} key={option} onClick={() => setMode(option)} type="button">{option}</button>
+              <button className={mode === option ? "is-active" : ""} key={option} onClick={() => selectMode(option)} type="button">{option}</button>
             ))}
           </div>
           {mode === "auto" ? (
@@ -230,16 +250,23 @@ export default function DemoPage() {
               </div>
             )
           ) : null}
-          <div className={`decision-actions ${mode === "manual" || mode === "auto" ? "decision-actions-single" : ""}`} role="group" aria-label="Board actions">
+          <div className={`decision-actions ${mode === "manual" ? "decision-actions-single" : ""}`} role="group" aria-label="Board actions">
             {mode === "assisted" ? <button disabled={!recommendation} onClick={playRecommendation} type="button">play this move</button> : null}
-            <button onClick={reset} type="button">{mode === "auto" ? "restart auto" : "new board"} <span aria-hidden="true">↻</span></button>
+            {mode === "auto" ? (
+              <button disabled={finished} onClick={() => setAutoRunning((running) => !running)} type="button">
+                {autoRunning ? "pause" : "run auto"} <span aria-hidden="true">{autoRunning ? "❚❚" : "▶"}</span>
+              </button>
+            ) : null}
+            <button onClick={reset} type="button">new board <span aria-hidden="true">↻</span></button>
           </div>
           <div className="decision-evidence" key={`evidence-${game.id}-${mode}-${recommendation?.index ?? game.status}-${game.moves}`}>
             <p>
               {mode === "manual"
                 ? "Assistance is off. Proofs and mine risk stay hidden while you play."
                 : mode === "auto"
-                  ? "Auto flags proven mines, then plays the next recommended cell at the selected speed."
+                  ? autoRunning
+                    ? "Auto flags proven mines, then plays the next recommended cell at the selected speed."
+                    : "Auto is paused. Press run auto to let the agent take the board."
                   : recommendation
                     ? recommendation.evidence
                     : game.status === "won"
