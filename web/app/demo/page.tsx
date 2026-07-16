@@ -34,7 +34,7 @@ export default function DemoPage() {
   const [autoRunning, setAutoRunning] = useState(false);
   const [hovered, setHovered] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
-  const [autoDelay, setAutoDelay] = useState(620);
+  const [autoDelay, setAutoDelay] = useState(600);
 
   useEffect(() => {
     if (game.status !== "playing") return undefined;
@@ -227,13 +227,6 @@ export default function DemoPage() {
               <button className={mode === option ? "is-active" : ""} key={option} onClick={() => selectMode(option)} type="button">{option}</button>
             ))}
           </div>
-          {mode === "auto" ? (
-            <label className="auto-speed">
-              <span>auto speed</span>
-              <input aria-label="Auto play speed" max="1400" min="250" onChange={(event) => setAutoDelay(Number(event.target.value))} step="50" type="range" value={autoDelay} />
-              <output>{autoDelay < 550 ? "fast" : autoDelay < 950 ? "steady" : "slow"}</output>
-            </label>
-          ) : null}
           <p className="decision-label">{mode === "manual" ? "inspecting" : mode === "auto" ? "auto move" : "next move"}</p>
           <div className={`decision-coordinate ${mode === "manual" && !finished ? "decision-coordinate-manual" : ""}`} key={`coordinate-${game.id}-${mode}-${recommendedCoordinate ?? game.status}`}>
             {finished ? (game.status === "won" ? ":)" : ":(") : mode === "manual" ? hovered ?? "+" : recommendedCoordinate ?? "+"}
@@ -259,6 +252,13 @@ export default function DemoPage() {
             ) : null}
             <button onClick={reset} type="button">new board <span aria-hidden="true">↻</span></button>
           </div>
+          {mode === "auto" ? (
+            <label className="auto-speed">
+              <span>slow</span>
+              <input aria-label="Auto play speed" max="1400" min="250" onChange={(event) => setAutoDelay(1650 - Number(event.target.value))} step="50" type="range" value={1650 - autoDelay} />
+              <output>{autoDelay < 550 ? "fast" : autoDelay < 950 ? "steady" : "slow"}</output>
+            </label>
+          ) : null}
           <div className="decision-evidence" key={`evidence-${game.id}-${mode}-${recommendation?.index ?? game.status}-${game.moves}`}>
             <p>
               {mode === "manual"
