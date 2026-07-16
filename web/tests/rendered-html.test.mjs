@@ -40,11 +40,10 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.match(navigation, /Demo/);
   assert.match(navigation, /Benchmarks/);
   assert.doesNotMatch(navigation, /href="\/play"/);
-  assert.match(engine, /candidate !== safeIndex/);
-  assert.doesNotMatch(engine, /safeZone/);
-  assert.match(engine, /beginner: \{ columns: 9/);
-  assert.match(engine, /intermediate: \{ columns: 16/);
-  assert.match(engine, /expert: \{ columns: 30/);
+  assert.match(engine, /safeZone/);
+  assert.match(engine, /easy: \{ columns: 9/);
+  assert.match(engine, /medium: \{ columns: 18/);
+  assert.match(engine, /hard: \{ columns: 24/);
   assert.match(engine, /mines: 99/);
   assert.match(home, /<span>Where logic<\/span><span>meets chance\.<\/span>/);
   assert.match(styles, /\.hero-board-shell \{ position: absolute; top: 50%; right: 0; width: min\(100%, 46vw, 720px\);/);
@@ -54,6 +53,9 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.match(demo, /\["manual", "assisted", "auto"\]/);
   assert.match(demo, /Auto play speed/);
   assert.match(demo, /PRESETS\[presetId\]/);
+  assert.match(demo, /board-lock/);
+  assert.match(demo, /run auto/);
+  assert.match(demo, /MineMark/);
   assert.match(engine, /chordCell/);
   assert.match(engine, /provenSafe/);
   assert.match(demo, /revealCell|handleReveal/);
