@@ -12,7 +12,10 @@ class RandomSquareSymmetryDataset(Dataset[tuple[torch.Tensor, ...]]):
     def __init__(self, dataset: Dataset[tuple[torch.Tensor, ...]]) -> None:
         if not len(dataset):
             raise ValueError("dataset must contain at least one state")
-        observation, _, _ = dataset[0]
+        sample = dataset[0]
+        if not sample:
+            raise ValueError("dataset samples must include an observation tensor")
+        observation = sample[0]
         if observation.ndim != 2 or observation.shape[0] != observation.shape[1]:
             raise ValueError(
                 "square-board symmetry augmentation requires two-dimensional square states"
