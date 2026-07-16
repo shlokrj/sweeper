@@ -59,15 +59,15 @@ export function newGame(id: number): Game {
 }
 
 /**
- * Mines avoid the first revealed cell and its whole neighborhood, so the
- * opening click always lands on a zero and breaks the board open.
+ * Classic first-click rule: mines are placed after the opening reveal and
+ * only the clicked cell itself is excluded. The first click is never a
+ * mine, but it opens a cascade only when it happens to land on a zero.
  */
 function placeMines(board: Cell[], safeIndex: number): Cell[] {
-  const safeZone = new Set([safeIndex, ...neighbors(safeIndex)]);
   const mines = new Set<number>();
   while (mines.size < MINE_COUNT) {
     const candidate = Math.floor(Math.random() * CELL_COUNT);
-    if (!safeZone.has(candidate)) mines.add(candidate);
+    if (candidate !== safeIndex) mines.add(candidate);
   }
   const placed = board.map((cell, index) => ({ ...cell, flagged: cell.flagged, mine: mines.has(index) }));
   return placed.map((cell, index) => ({
@@ -195,7 +195,7 @@ export function analyze(board: Cell[], status: Status): Analysis {
       provenMines,
       provenSafe,
       recommendation: {
-        evidence: "The opening reveal is guaranteed safe and always breaks the board open. A center start touches the most cells.",
+        evidence: "The opening reveal is never a mine, though it only cascades when it lands on a zero. A center start touches the most cells.",
         index: center,
         label: "proven",
         method: "safe first reveal",
