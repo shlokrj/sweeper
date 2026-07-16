@@ -20,9 +20,8 @@ test("server-renders the light Minesweeper home page", async () => {
 });
 
 test("the navigation, playable demo, and benchmark routes remain available", async () => {
-  const [brandMark, heartMark, navigation, engine, home, styles, demo, benchmarks] = await Promise.all([
+  const [brandMark, navigation, engine, home, styles, demo, benchmarks] = await Promise.all([
     readFile(new URL("../app/components/brand-mark.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../app/components/heart-mark.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/site-nav.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/minesweeper.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
@@ -37,10 +36,11 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.match(brandMark, /blastPixels/);
   assert.match(brandMark, /document\.body\.append\(burst\)/);
   assert.match(brandMark, /onClick=\{explode\}/);
-  assert.match(heartMark, /className="heart-mark"/);
   assert.match(navigation, /Home/);
   assert.match(navigation, /Demo/);
   assert.match(navigation, /Benchmarks/);
+  assert.match(navigation, /made by shlok\.fyi/);
+  assert.match(navigation, /className="smile-mark">:\)<\/span>/);
   assert.doesNotMatch(navigation, /href="\/play"/);
   assert.match(engine, /safeZone/);
   assert.match(engine, /easy: \{[^}]*columns: 9/);
@@ -50,11 +50,10 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.match(engine, /breakMax/);
   assert.match(engine, /openingSize/);
   assert.match(home, /<span>Where logic<\/span><span>meets chance\.<\/span>/);
-  assert.match(home, /made by shlok\.fyi/);
-  assert.match(home, /HeartMark/);
+  assert.doesNotMatch(home, /made by shlok\.fyi/);
   assert.match(styles, /\.hero-board-shell \{ position: absolute; top: 50%; right: 0; width: min\(100%, 46vw, 720px\);/);
-  assert.match(styles, /@keyframes pixel-heartbeat/);
-  assert.match(styles, /\.made-by \{ display: inline-flex/);
+  assert.match(styles, /@keyframes pixel-smile/);
+  assert.match(styles, /\.nav-credit \{ justify-self: end;/);
   assert.match(styles, /@media \(max-width: 850px\)/);
   assert.match(demo, /manual/);
   assert.match(demo, /useState<PlayMode>\("assisted"\)/);
