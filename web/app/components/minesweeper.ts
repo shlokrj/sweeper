@@ -1,7 +1,7 @@
 export const PRESETS = {
-  beginner: { columns: 9, id: "beginner", label: "Beginner", mines: 10, rows: 9 },
-  intermediate: { columns: 16, id: "intermediate", label: "Intermediate", mines: 40, rows: 16 },
-  expert: { columns: 30, id: "expert", label: "Expert", mines: 99, rows: 16 },
+  easy: { columns: 9, id: "easy", label: "Easy", mines: 10, rows: 9 },
+  medium: { columns: 18, id: "medium", label: "Medium", mines: 40, rows: 14 },
+  hard: { columns: 24, id: "hard", label: "Hard", mines: 99, rows: 20 },
 } as const;
 
 export type PresetId = keyof typeof PRESETS;
@@ -69,15 +69,10 @@ function emptyBoard(preset: BoardPreset): Cell[] {
   }));
 }
 
-export function newGame(id: number, preset: BoardPreset = PRESETS.beginner): Game {
+export function newGame(id: number, preset: BoardPreset = PRESETS.easy): Game {
   return { board: emptyBoard(preset), firstReveal: true, id, moves: 0, preset, status: "ready" };
 }
 
-/**
- * Classic first-click rule: mines are placed after the opening reveal and
- * only the clicked cell itself is excluded. The first click is never a
- * mine, but it opens a cascade only when it happens to land on a zero.
- */
 function placeMines(board: Cell[], safeIndex: number, preset: BoardPreset): Cell[] {
   const mines = new Set<number>();
   while (mines.size < preset.mines) {
