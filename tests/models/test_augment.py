@@ -29,3 +29,27 @@ def test_random_symmetry_dataset_rejects_rectangular_boards() -> None:
 
     with pytest.raises(ValueError, match="square"):
         RandomSquareSymmetryDataset(dataset)
+
+
+def test_random_symmetry_dataset_keeps_strategy_masks_aligned() -> None:
+    observation = torch.arange(9, dtype=torch.int8).reshape(1, 3, 3)
+    targets = observation.float() + 100
+    mask = observation + 50
+    safe_mask = observation + 25
+    mine_mask = observation + 75
+    dataset = TensorDataset(observation, targets, mask, safe_mask, mine_mask)
+
+    transformed = RandomSquareSymmetryDataset(dataset)[0]
+
+    assert len(transformed) == 5
+    (
+        transformed_observation,
+        transformed_targets,
+        transformed_mask,
+        transformed_safe,
+        transformed_mines,
+    ) = transformed
+    assert torch.equal(transformed_targets, transformed_observation.float() + 100)
+    assert torch.equal(transformed_mask, transformed_observation + 50)
+    assert torch.equal(transformed_safe, transformed_observation + 25)
+    assert torch.equal(transformed_mines, transformed_observation + 75)
