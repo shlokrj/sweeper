@@ -20,11 +20,12 @@ test("server-renders the light Minesweeper home page", async () => {
 });
 
 test("the navigation, playable demo, and benchmark routes remain available", async () => {
-  const [brandMark, navigation, engine, home, demo, benchmarks] = await Promise.all([
+  const [brandMark, navigation, engine, home, styles, demo, benchmarks] = await Promise.all([
     readFile(new URL("../app/components/brand-mark.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/site-nav.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/minesweeper.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/demo/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/benchmarks/page.tsx", import.meta.url), "utf8"),
   ]);
@@ -46,6 +47,8 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.match(engine, /expert: \{ columns: 30/);
   assert.match(engine, /mines: 99/);
   assert.match(home, /<span>Where logic<\/span><span>meets chance\.<\/span>/);
+  assert.match(styles, /\.hero-board-shell \{ position: absolute; top: 50%; right: 0; width: min\(100%, 46vw, 720px\);/);
+  assert.match(styles, /@media \(max-width: 850px\)/);
   assert.match(demo, /manual/);
   assert.match(demo, /useState<PlayMode>\("assisted"\)/);
   assert.match(demo, /\["manual", "assisted", "auto"\]/);
