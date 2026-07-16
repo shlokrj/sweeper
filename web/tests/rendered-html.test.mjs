@@ -13,17 +13,18 @@ test("server-renders the light Minesweeper home page", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   const html = await response.text();
-  assert.match(html, /Where logic meets chance\./);
+  assert.match(html, /Where logic<\/span><span>meets chance\./);
   assert.match(html, /play a board/);
   assert.match(html, /win rate/);
   assert.doesNotMatch(html, /local build|decision stack|Minesweeper research \/ 2026/i);
 });
 
 test("the navigation, playable demo, and benchmark routes remain available", async () => {
-  const [brandMark, navigation, engine, demo, benchmarks] = await Promise.all([
+  const [brandMark, navigation, engine, home, demo, benchmarks] = await Promise.all([
     readFile(new URL("../app/components/brand-mark.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/site-nav.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/components/minesweeper.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/demo/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/benchmarks/page.tsx", import.meta.url), "utf8"),
   ]);
@@ -40,7 +41,16 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.doesNotMatch(navigation, /href="\/play"/);
   assert.match(engine, /candidate !== safeIndex/);
   assert.doesNotMatch(engine, /safeZone/);
+  assert.match(engine, /beginner: \{ columns: 9/);
+  assert.match(engine, /intermediate: \{ columns: 16/);
+  assert.match(engine, /expert: \{ columns: 30/);
+  assert.match(engine, /mines: 99/);
+  assert.match(home, /<span>Where logic<\/span><span>meets chance\.<\/span>/);
   assert.match(demo, /manual/);
+  assert.match(demo, /useState<PlayMode>\("assisted"\)/);
+  assert.match(demo, /\["manual", "assisted", "auto"\]/);
+  assert.match(demo, /Auto play speed/);
+  assert.match(demo, /PRESETS\[presetId\]/);
   assert.match(engine, /chordCell/);
   assert.match(engine, /provenSafe/);
   assert.match(demo, /revealCell|handleReveal/);

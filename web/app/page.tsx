@@ -75,7 +75,7 @@ export default function Home() {
 
       <section className="home-hero" aria-labelledby="home-title">
         <div className="hero-copy">
-          <h1 id="home-title">Where logic meets chance.</h1>
+          <h1 id="home-title"><span>Where logic</span><span>meets chance.</span></h1>
           <p className="hero-lede">
             <strong>Sweeper</strong> explains each Minesweeper move with a proof. It uses probability only when the board requires a guess.
           </p>
