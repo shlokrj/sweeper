@@ -4,18 +4,19 @@ import { type CSSProperties, type KeyboardEvent, type MouseEvent, useEffect, use
 import { FlagMark } from "../components/flag-mark";
 import { SiteNav } from "../components/site-nav";
 import {
-  COLUMNS,
-  MINE_COUNT,
+  PRESETS,
   analyze,
   chordCell,
+  columnLabel,
   coordinate,
   newGame,
   revealCell,
   toggleFlag,
   type Game,
+  type PresetId,
 } from "../components/minesweeper";
 
-const columnLabels = ["A", "B", "C", "D", "E", "F", "G", "H", "I"];
+type PlayMode = "manual" | "assisted" | "auto";
 
 const blastPixels = [
   [-13, -13, 5, "#e6c472"], [-4, -16, 6, "#dd8582"], [8, -11, 5, "#e6c472"],
@@ -27,9 +28,10 @@ const hiddenAnalysis = { frontier: [], provenMines: new Map<number, string>(), p
 
 export default function DemoPage() {
   const [game, setGame] = useState<Game>(() => newGame(0));
-  const [assist, setAssist] = useState(true);
+  const [mode, setMode] = useState<PlayMode>("assisted");
   const [hovered, setHovered] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
+  const [autoDelay, setAutoDelay] = useState(620);
 
   useEffect(() => {
     if (game.status !== "playing") return undefined;
@@ -37,19 +39,36 @@ export default function DemoPage() {
     return () => window.clearInterval(timer);
   }, [game.status]);
 
+  const showAssistance = mode !== "manual";
   const analysis = useMemo(
-    () => (assist ? analyze(game.board, game.status) : hiddenAnalysis),
-    [assist, game.board, game.status],
+    () => (showAssistance ? analyze(game.board, game.status, game.preset) : hiddenAnalysis),
+    [game.board, game.preset, game.status, showAssistance],
   );
   const recommendation = analysis.recommendation;
-  const recommendedCoordinate = recommendation ? coordinate(recommendation.index) : null;
+  const recommendedCoordinate = recommendation ? coordinate(recommendation.index, game.preset) : null;
+  const columnLabels = Array.from({ length: game.preset.columns }, (_, index) => columnLabel(index));
+  const rowLabels = Array.from({ length: game.preset.rows }, (_, index) => index + 1);
   const flaggedCount = game.board.filter((cell) => cell.flagged).length;
-  const minesLeft = MINE_COUNT - flaggedCount;
+  const minesLeft = game.preset.mines - flaggedCount;
   const activeCoordinate = hovered ?? recommendedCoordinate ?? "";
+  const activeColumn = activeCoordinate.match(/[A-Z]+/)?.[0] ?? "";
+  const activeRow = activeCoordinate.match(/\d+/)?.[0] ?? "";
+  const finished = game.status === "won" || game.status === "lost";
+  const boardStyle = {
+    "--board-columns": game.preset.columns,
+    "--board-rows": game.preset.rows,
+  } as CSSProperties;
 
   function reset() {
-    setGame((current) => newGame(current.id + 1));
+    setGame((current) => newGame(current.id + 1, current.preset));
     setElapsed(0);
+    setHovered(null);
+  }
+
+  function selectPreset(presetId: PresetId) {
+    setGame((current) => newGame(current.id + 1, PRESETS[presetId]));
+    setElapsed(0);
+    setHovered(null);
   }
 
   function handleReveal(index: number) {
@@ -74,96 +93,132 @@ export default function DemoPage() {
     if (recommendation) handleReveal(recommendation.index);
   }
 
-  const finished = game.status === "won" || game.status === "lost";
+  function playAutoStep() {
+    setGame((current) => {
+      if (current.status === "won" || current.status === "lost") return current;
+      const currentAnalysis = analyze(current.board, current.status, current.preset);
+      const mineToFlag = [...currentAnalysis.provenMines.keys()].find((index) => !current.board[index].flagged);
+      if (mineToFlag !== undefined) return toggleFlag(current, mineToFlag);
+      return currentAnalysis.recommendation ? revealCell(current, currentAnalysis.recommendation.index) : current;
+    });
+  }
+
+  useEffect(() => {
+    if (mode !== "auto" || finished) return undefined;
+    const timer = window.setTimeout(playAutoStep, autoDelay);
+    return () => window.clearTimeout(timer);
+  }, [autoDelay, finished, game.board, game.id, mode]);
 
   return (
     <main className="site-page inner-page">
       <SiteNav active="demo" />
-      <section className="inner-heading">
+      <section className="inner-heading demo-heading">
         <h1>Demo</h1>
-        <p>Play a real beginner board. The panel shows the proof, or the honest risk, behind the next move.</p>
+        <p>Play a real board. The panel shows the proof, or the honest risk, behind the next move.</p>
       </section>
 
       <section className="demo-surface corner-ticks" aria-label="Playable Minesweeper demo">
         <div className="demo-board-area">
           <div className="demo-meta">
-            <span>9 × 9 board · {MINE_COUNT} mines</span>
+            <span>{game.preset.rows} × {game.preset.columns} board · {game.preset.mines} mines</span>
             <span>mines {String(minesLeft).padStart(2, "0")} · moves {String(game.moves).padStart(2, "0")} · time {String(elapsed).padStart(3, "0")}</span>
           </div>
-          <div className="board-frame">
-            <div className="frame-cols" aria-hidden="true">
-              {columnLabels.map((column) => (
-                <span className={activeCoordinate[0] === column ? "is-live" : ""} key={column}>{column}</span>
-              ))}
-            </div>
-            <div className="frame-rows" aria-hidden="true">
-              {columnLabels.map((_, rowIndex) => (
-                <span className={activeCoordinate.slice(1) === `${rowIndex + 1}` ? "is-live" : ""} key={rowIndex}>{rowIndex + 1}</span>
-              ))}
-            </div>
-            <div className={`board-slot is-${game.status}`}>
-              <div className="play-board" key={game.id} role="grid" aria-label="Playable 9 by 9 Minesweeper board" onMouseLeave={() => setHovered(null)}>
-                {game.board.map((cell, index) => {
-                  const cellCoordinate = coordinate(index);
-                  const rowIndex = Math.floor(index / COLUMNS);
-                  const columnIndex = index % COLUMNS;
-                  const scanlineCell = cellCoordinate !== activeCoordinate && activeCoordinate !== "" && (cellCoordinate[0] === activeCoordinate[0] || cellCoordinate.slice(1) === activeCoordinate.slice(1));
-                  const recommendedCell = !finished && recommendedCoordinate === cellCoordinate;
-                  const mineHint = !finished && !cell.revealed && analysis.provenMines.has(index);
-                  const visibleValue = cell.exploded ? "mine" : cell.wrongFlag ? "wrong flag" : cell.flagged ? "flagged" : cell.revealed ? cell.adjacent === 0 ? "empty" : `${cell.adjacent} adjacent mines` : "covered";
-                  return (
-                    <button
-                      aria-label={`${cellCoordinate}, ${visibleValue}`}
-                      className={`play-cell ${cell.revealed ? "is-revealed" : "is-covered"} ${cell.flagged ? "is-flagged" : ""} ${cell.exploded ? "is-exploded" : ""} ${cell.wrongFlag ? "is-wrong-flag" : ""} ${cell.revealed && cell.adjacent ? `play-number-${cell.adjacent}` : ""} ${scanlineCell ? "is-scanline" : ""} ${recommendedCell ? "is-recommended" : ""} ${mineHint ? "is-mine-hint" : ""}`}
-                      key={`${game.id}-${index}`}
-                      onClick={() => handleReveal(index)}
-                      onContextMenu={(event) => handleContextMenu(event, index)}
-                      onKeyDown={(event) => handleKeyDown(event, index)}
-                      onMouseEnter={() => setHovered(cellCoordinate)}
-                      role="gridcell"
-                      style={{ "--cell-delay": `${80 + (rowIndex + columnIndex) * 26}ms` } as CSSProperties}
-                      type="button"
-                    >
-                      {cell.exploded ? <><span className="mine-symbol">✹</span><span className="play-explosion" aria-hidden="true">{blastPixels.map(([x, y, size, color], pixelIndex) => <i key={pixelIndex} style={{ "--blast-color": color, "--blast-size": `${size}px`, "--blast-x": `${x}px`, "--blast-y": `${y}px` } as CSSProperties} />)}</span></> : null}
-                      {!cell.exploded && cell.wrongFlag ? <span className="wrong-flag">×</span> : null}
-                      {!cell.exploded && !cell.wrongFlag && cell.flagged ? <FlagMark compact /> : null}
-                      {!cell.exploded && !cell.wrongFlag && !cell.flagged && cell.revealed && cell.mine ? <span className="mine-symbol">✹</span> : null}
-                      {!cell.exploded && !cell.wrongFlag && !cell.flagged && cell.revealed && !cell.mine && cell.adjacent > 0 ? cell.adjacent : null}
-                    </button>
-                  );
-                })}
+          <div className="preset-selector" aria-label="Board preset" role="group">
+            {(Object.keys(PRESETS) as PresetId[]).map((presetId) => {
+              const preset = PRESETS[presetId];
+              return (
+                <button
+                  aria-pressed={game.preset.id === presetId}
+                  className={game.preset.id === presetId ? "is-active" : ""}
+                  key={presetId}
+                  onClick={() => selectPreset(presetId)}
+                  type="button"
+                >
+                  <strong>{preset.label}</strong>
+                  <span>{preset.rows} × {preset.columns} · {preset.mines}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="demo-board-scroll">
+            <div className={`board-frame is-${game.preset.id}`} style={boardStyle}>
+              <div className="frame-cols" aria-hidden="true">
+                {columnLabels.map((column) => (
+                  <span className={activeColumn === column ? "is-live" : ""} key={column}>{column}</span>
+                ))}
               </div>
-
-              {finished ? (
-                <div className={`play-result is-${game.status}`} role="status">
-                  <span>{game.status === "won" ? "clear" : "boom"}</span>
-                  <strong>{game.status === "won" ? "board cleared" : "mine hit"}</strong>
-                  <button onClick={reset} type="button">play again</button>
+              <div className="frame-rows" aria-hidden="true">
+                {rowLabels.map((row) => (
+                  <span className={activeRow === `${row}` ? "is-live" : ""} key={row}>{row}</span>
+                ))}
+              </div>
+              <div className={`board-slot is-${game.status}`}>
+                <div className="play-board" key={game.id} role="grid" aria-label={`Playable ${game.preset.label} Minesweeper board`} onMouseLeave={() => setHovered(null)} style={boardStyle}>
+                  {game.board.map((cell, index) => {
+                    const cellCoordinate = coordinate(index, game.preset);
+                    const rowIndex = Math.floor(index / game.preset.columns);
+                    const columnIndex = index % game.preset.columns;
+                    const scanlineCell = cellCoordinate !== activeCoordinate && activeCoordinate !== "" && (cellCoordinate[0] === activeCoordinate[0] || cellCoordinate.slice(1) === activeCoordinate.slice(1));
+                    const recommendedCell = !finished && showAssistance && recommendedCoordinate === cellCoordinate;
+                    const mineHint = !finished && showAssistance && !cell.revealed && analysis.provenMines.has(index);
+                    const visibleValue = cell.exploded ? "mine" : cell.wrongFlag ? "wrong flag" : cell.flagged ? "flagged" : cell.revealed ? cell.adjacent === 0 ? "empty" : `${cell.adjacent} adjacent mines` : "covered";
+                    return (
+                      <button
+                        aria-label={`${cellCoordinate}, ${visibleValue}`}
+                        className={`play-cell ${cell.revealed ? "is-revealed" : "is-covered"} ${cell.flagged ? "is-flagged" : ""} ${cell.exploded ? "is-exploded" : ""} ${cell.wrongFlag ? "is-wrong-flag" : ""} ${cell.revealed && cell.adjacent ? `play-number-${cell.adjacent}` : ""} ${scanlineCell ? "is-scanline" : ""} ${recommendedCell ? "is-recommended" : ""} ${mineHint ? "is-mine-hint" : ""}`}
+                        key={`${game.id}-${index}`}
+                        onClick={() => handleReveal(index)}
+                        onContextMenu={(event) => handleContextMenu(event, index)}
+                        onKeyDown={(event) => handleKeyDown(event, index)}
+                        onMouseEnter={() => setHovered(cellCoordinate)}
+                        role="gridcell"
+                        style={{ "--cell-delay": `${80 + (rowIndex + columnIndex) * 18}ms` } as CSSProperties}
+                        type="button"
+                      >
+                        {cell.exploded ? <><span className="mine-symbol">✹</span><span className="play-explosion" aria-hidden="true">{blastPixels.map(([x, y, size, color], pixelIndex) => <i key={pixelIndex} style={{ "--blast-color": color, "--blast-size": `${size}px`, "--blast-x": `${x}px`, "--blast-y": `${y}px` } as CSSProperties} />)}</span></> : null}
+                        {!cell.exploded && cell.wrongFlag ? <span className="wrong-flag">×</span> : null}
+                        {!cell.exploded && !cell.wrongFlag && cell.flagged ? <FlagMark compact /> : null}
+                        {!cell.exploded && !cell.wrongFlag && !cell.flagged && cell.revealed && cell.mine ? <span className="mine-symbol">✹</span> : null}
+                        {!cell.exploded && !cell.wrongFlag && !cell.flagged && cell.revealed && !cell.mine && cell.adjacent > 0 ? cell.adjacent : null}
+                      </button>
+                    );
+                  })}
                 </div>
-              ) : null}
+
+                {finished ? (
+                  <div className={`play-result is-${game.status}`} role="status">
+                    <span>{game.status === "won" ? "clear" : "boom"}</span>
+                    <strong>{game.status === "won" ? "board cleared" : "mine hit"}</strong>
+                    <button onClick={reset} type="button">play again</button>
+                  </div>
+                ) : null}
+              </div>
             </div>
           </div>
           <div className="demo-board-key">
-            {assist ? (
-              <>
-                <span><i className="key-green" /> proven safe</span>
-                <span><i className="key-red" /> proven mine</span>
-              </>
-            ) : null}
+            {showAssistance ? <><span><i className="key-green" /> proven safe</span><span><i className="key-red" /> proven mine</span></> : null}
             <span>right click or <kbd>F</kbd> flags a cell</span>
           </div>
         </div>
 
         <aside className="demo-decision">
-          <div className="assist-toggle" role="group" aria-label="Assistant mode">
-            <button className={assist ? "is-active" : ""} onClick={() => setAssist(true)} type="button">assist</button>
-            <button className={assist ? "" : "is-active"} onClick={() => setAssist(false)} type="button">manual</button>
+          <div className="mode-selector" role="group" aria-label="Demo mode">
+            {(["manual", "assisted", "auto"] as PlayMode[]).map((option) => (
+              <button className={mode === option ? "is-active" : ""} key={option} onClick={() => setMode(option)} type="button">{option}</button>
+            ))}
           </div>
-          <p className="decision-label">{assist ? "next move" : "inspecting"}</p>
-          <div className={`decision-coordinate ${!assist && !finished ? "decision-coordinate-manual" : ""}`} key={`coordinate-${game.id}-${assist ? recommendedCoordinate ?? game.status : "manual"}`}>
-            {finished ? (game.status === "won" ? ":)" : ":(") : assist ? recommendedCoordinate ?? "+" : hovered ?? "+"}
+          {mode === "auto" ? (
+            <label className="auto-speed">
+              <span>auto speed</span>
+              <input aria-label="Auto play speed" max="1400" min="250" onChange={(event) => setAutoDelay(Number(event.target.value))} step="50" type="range" value={autoDelay} />
+              <output>{autoDelay < 550 ? "fast" : autoDelay < 950 ? "steady" : "slow"}</output>
+            </label>
+          ) : null}
+          <p className="decision-label">{mode === "manual" ? "inspecting" : mode === "auto" ? "auto move" : "next move"}</p>
+          <div className={`decision-coordinate ${mode === "manual" && !finished ? "decision-coordinate-manual" : ""}`} key={`coordinate-${game.id}-${mode}-${recommendedCoordinate ?? game.status}`}>
+            {finished ? (game.status === "won" ? ":)" : ":(") : mode === "manual" ? hovered ?? "+" : recommendedCoordinate ?? "+"}
           </div>
-          {assist ? (
+          {showAssistance ? (
             recommendation ? (
               <div className="decision-verdict" key={`verdict-${game.id}-${recommendation.index}-${recommendation.label}`}>
                 <span className={`evidence-chip ${recommendation.label === "approximate" ? "evidence-chip-approximate" : ""}`}>{recommendation.label}</span>
@@ -175,21 +230,23 @@ export default function DemoPage() {
               </div>
             )
           ) : null}
-          <div className={`decision-actions ${assist ? "" : "decision-actions-single"}`} role="group" aria-label="Assistant actions">
-            {assist ? <button disabled={!recommendation} onClick={playRecommendation} type="button">play this move</button> : null}
-            <button onClick={reset} type="button">new board <span aria-hidden="true">↻</span></button>
+          <div className={`decision-actions ${mode === "manual" || mode === "auto" ? "decision-actions-single" : ""}`} role="group" aria-label="Board actions">
+            {mode === "assisted" ? <button disabled={!recommendation} onClick={playRecommendation} type="button">play this move</button> : null}
+            <button onClick={reset} type="button">{mode === "auto" ? "restart auto" : "new board"} <span aria-hidden="true">↻</span></button>
           </div>
-          <div className="decision-evidence" key={`evidence-${game.id}-${assist ? `${recommendation?.index ?? game.status}-${game.moves}` : "manual"}`}>
+          <div className="decision-evidence" key={`evidence-${game.id}-${mode}-${recommendation?.index ?? game.status}-${game.moves}`}>
             <p>
-              {!assist
-                ? "Assist is off. Proofs and mine risk stay hidden while you play."
-                : recommendation
-                  ? recommendation.evidence
-                  : game.status === "won"
-                    ? "Every safe cell is revealed and every mine is flagged."
-                    : "A mine ended this run. The board stays open for inspection."}
+              {mode === "manual"
+                ? "Assistance is off. Proofs and mine risk stay hidden while you play."
+                : mode === "auto"
+                  ? "Auto flags proven mines, then plays the next recommended cell at the selected speed."
+                  : recommendation
+                    ? recommendation.evidence
+                    : game.status === "won"
+                      ? "Every safe cell is revealed and every mine is flagged."
+                      : "A mine ended this run. The board stays open for inspection."}
             </p>
-            {assist ? (
+            {showAssistance ? (
               <dl>
                 <div><dt>method</dt><dd>{recommendation ? recommendation.method : "game over"}</dd></div>
                 <div><dt>frontier</dt><dd>{analysis.frontier.length} {analysis.frontier.length === 1 ? "candidate" : "candidates"}</dd></div>
