@@ -38,7 +38,9 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.match(navigation, /Demo/);
   assert.match(navigation, /Benchmarks/);
   assert.doesNotMatch(navigation, /href="\/play"/);
-  assert.match(engine, /safeZone/);
+  assert.match(engine, /candidate !== safeIndex/);
+  assert.doesNotMatch(engine, /safeZone/);
+  assert.match(demo, /manual/);
   assert.match(engine, /chordCell/);
   assert.match(engine, /provenSafe/);
   assert.match(demo, /revealCell|handleReveal/);
