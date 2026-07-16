@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { FlagMark } from "./components/flag-mark";
+import { HeartMark } from "./components/heart-mark";
 import { SiteNav } from "./components/site-nav";
 import { ditherMask, erosionEdge } from "./components/pixel-texture";
 
@@ -151,7 +152,12 @@ export default function Home() {
 
       <footer className="site-footer">
         <span>sweeper</span>
-        <span>Minesweeper research project</span>
+        <div className="footer-meta">
+          <span>Minesweeper research project</span>
+          <a className="made-by" href="https://shlok.fyi/" rel="noreferrer" target="_blank">
+            made by shlok.fyi <HeartMark />
+          </a>
+        </div>
       </footer>
     </main>
   );
