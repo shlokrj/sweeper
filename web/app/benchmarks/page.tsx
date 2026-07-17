@@ -13,11 +13,25 @@ const benchmarkRows = [
   ["strategy CNN hybrid", "91.0%", "19.7", "model rank + proof"],
 ];
 
-const studyCharts = [
-  { control: 66, controlLabel: "66.0%", delta: "+5.2 pp", label: "CNN win rate", max: 100, strategy: 71.2, strategyLabel: "71.2%" },
-  { control: 74.8, controlLabel: "74.8%", delta: "+0.6 pp", label: "CNN hybrid win rate", max: 100, strategy: 75.4, strategyLabel: "75.4%" },
-  { control: 0.000259, controlLabel: "0.000259", delta: "−22.4%", label: "Brier score", max: 0.000259, strategy: 0.000201, strategyLabel: "0.000201" },
-  { control: 0.001483, controlLabel: "0.001483", delta: "−68.4%", label: "Expected calibration error", max: 0.001483, strategy: 0.000468, strategyLabel: "0.000468" },
+const studyFigures = [
+  {
+    groups: [
+      { control: 66, controlLabel: "66.0", delta: "+5.2 pp", name: "cnn", strategy: 71.2, strategyLabel: "71.2" },
+      { control: 74.8, controlLabel: "74.8", delta: "+0.6 pp", name: "cnn hybrid", strategy: 75.4, strategyLabel: "75.4" },
+    ],
+    max: 100,
+    ticks: ["100", "50", "0"],
+    title: "win rate · %",
+  },
+  {
+    groups: [
+      { control: 0.259, controlLabel: "0.26", delta: "−22.4%", name: "brier", strategy: 0.201, strategyLabel: "0.20" },
+      { control: 1.483, controlLabel: "1.48", delta: "−68.4%", name: "calibration", strategy: 0.468, strategyLabel: "0.47" },
+    ],
+    max: 1.5,
+    ticks: ["1.5", "0.75", "0"],
+    title: "calibration · e-3",
+  },
 ];
 
 const highlightStyle = { "--board-dust": pixelDust(160, 18, 17, 0.4) } as CSSProperties;
@@ -44,31 +58,50 @@ export default function BenchmarksPage() {
       <Reveal>
         <section className="strategy-study" aria-labelledby="strategy-study-title">
           <div className="strategy-study-copy">
-            <span>intermediate extension</span>
             <h2 id="strategy-study-title">The harder board check.</h2>
             <p>The same control and strategy models also ran on 16 × 16 boards with 40 mines. The strategy model adds three playbook-derived channels.</p>
           </div>
-          <div className="strategy-charts" aria-label="Control and strategy model comparison">
-            {studyCharts.map((chart, index) => (
-              <div className="strategy-chart" key={chart.label} style={{ "--chart-delay": `${120 + index * 110}ms` } as CSSProperties}>
-                <div className="strategy-chart-head">
-                  <span>{chart.label}</span>
-                  <strong>{chart.delta}</strong>
+          <div className="strategy-figures" aria-label="Control and strategy model comparison">
+            {studyFigures.map((figure, figureIndex) => (
+              <figure className="pixel-figure" key={figure.title} style={{ "--figure-delay": `${140 + figureIndex * 130}ms` } as CSSProperties}>
+                <figcaption>{figure.title}</figcaption>
+                <div className="figure-body">
+                  <div className="figure-ticks" aria-hidden="true">
+                    {figure.ticks.map((tick) => <span key={tick}>{tick}</span>)}
+                  </div>
+                  <div>
+                    <div className="figure-plot">
+                      {figure.groups.map((group) => (
+                        <div className="figure-columns" key={group.name}>
+                          <div className="figure-column">
+                            <em>{group.controlLabel}</em>
+                            <i style={{ "--h": `${(group.control / figure.max) * 100}%` } as CSSProperties} />
+                          </div>
+                          <div className="figure-column is-strategy">
+                            <em>{group.strategyLabel}</em>
+                            <i style={{ "--h": `${(group.strategy / figure.max) * 100}%` } as CSSProperties} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="figure-names">
+                      {figure.groups.map((group) => (
+                        <div key={group.name}>
+                          <span>{group.name}</span>
+                          <strong>{group.delta}</strong>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <div className="chart-bar-row">
-                  <span>control</span>
-                  <i aria-hidden="true" className="compare-bar" style={{ "--fill": `${(chart.control / chart.max) * 100}%` } as CSSProperties} />
-                  <em>{chart.controlLabel}</em>
-                </div>
-                <div className="chart-bar-row is-strategy">
-                  <span>strategy</span>
-                  <i aria-hidden="true" className="compare-bar" style={{ "--fill": `${(chart.strategy / chart.max) * 100}%` } as CSSProperties} />
-                  <em>{chart.strategyLabel}</em>
-                </div>
-              </div>
+              </figure>
             ))}
+            <div className="figure-legend" aria-hidden="true">
+              <span><i className="key-control" /> control</span>
+              <span><i className="key-strategy" /> strategy</span>
+            </div>
           </div>
-          <p className="strategy-method">Lower is better for Brier score and expected calibration error. This separate test uses 500 held-out intermediate boards.</p>
+          <p className="strategy-method">Lower is better for Brier score and expected calibration error. 500 held-out intermediate boards.</p>
         </section>
       </Reveal>
 
