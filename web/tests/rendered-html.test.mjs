@@ -80,4 +80,8 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.match(benchmarks, /\+5\.2 pp/);
   assert.match(benchmarks, /Expected calibration error/);
   assert.match(styles, /\.strategy-study \{ display: grid;/);
+  assert.match(styles, /\.compare-bar/);
+  assert.match(benchmarks, /strategy-charts/);
+  assert.match(benchmarks, /<Reveal>/);
+  assert.doesNotMatch(benchmarks, /strategy-matrix/);
 });
