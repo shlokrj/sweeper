@@ -84,9 +84,9 @@ export default function Home() {
             <Link className="secondary-link" href="/benchmarks">see benchmarks</Link>
           </div>
           <dl className="hero-stats">
-            <div><dt>win rate</dt><dd className="stat-green">75.4%</dd></div>
+            <div><dt>win rate</dt><dd className="stat-green">91.0%</dd></div>
             <div><dt>test boards</dt><dd className="stat-blue">500</dd></div>
-            <div><dt>mine count</dt><dd className="stat-red">40</dd></div>
+            <div><dt>mine count</dt><dd className="stat-red">10</dd></div>
           </dl>
         </div>
 
