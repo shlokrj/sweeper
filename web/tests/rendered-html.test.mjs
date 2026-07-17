@@ -50,6 +50,8 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.match(engine, /breakMax/);
   assert.match(engine, /openingSize/);
   assert.match(home, /<span>Where logic<\/span><span>meets chance\.<\/span>/);
+  assert.match(home, /75\.4%/);
+  assert.match(home, /mine count<\/dt><dd className="stat-red">40/);
   assert.doesNotMatch(home, /made by shlok\.fyi/);
   assert.match(styles, /\.hero-board-shell \{ position: absolute; top: 50%; right: 0; width: min\(100%, 46vw, 720px\);/);
   assert.match(styles, /@keyframes pixel-smile/);
@@ -72,6 +74,10 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.match(demo, /mine hit/);
   assert.match(demo, /is-scanline/);
   assert.match(demo, /play this move/);
-  assert.match(benchmarks, /90\.6%/);
-  assert.match(benchmarks, /seeds from 20000 through 20499/);
+  assert.match(benchmarks, /75\.4%/);
+  assert.match(benchmarks, /seeds from 70000 through 70499/);
+  assert.match(benchmarks, /strategy channel ablation/);
+  assert.match(benchmarks, /\+5\.2 pp/);
+  assert.match(benchmarks, /Expected calibration error/);
+  assert.match(styles, /\.strategy-study \{ display: grid;/);
 });
