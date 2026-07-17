@@ -76,11 +76,13 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.match(demo, /play this move/);
   assert.match(benchmarks, /91\.0%/);
   assert.match(benchmarks, /seeds from 20000 through 20499/);
-  assert.match(benchmarks, /The harder board check\./);
+  assert.match(benchmarks, /<span>The harder<\/span><span>board check\.<\/span>/);
   assert.match(benchmarks, /\+5\.2 pp/);
   assert.match(benchmarks, /expected calibration error/i);
   assert.match(styles, /\.strategy-study \{ display: grid;/);
   assert.match(styles, /\.figure-column/);
+  assert.match(styles, /\.strategy-study h2 span \{ display: block;/);
+  assert.match(styles, /--plot-height: 220px/);
   assert.match(benchmarks, /strategy-figures/);
   assert.match(benchmarks, /<Reveal>/);
   assert.doesNotMatch(benchmarks, /strategy-matrix|strategy-charts/);
