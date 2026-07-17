@@ -3,13 +3,13 @@ import { SiteNav } from "../components/site-nav";
 import { pixelDust } from "../components/pixel-texture";
 
 const benchmarkRows = [
-  ["random", "0.0%", "6.0", "uniform valid move"],
-  ["local heuristic", "0.2%", "9.4", "clue count"],
-  ["symbolic", "68.2%", "65.5", "constraint proof"],
-  ["exact", "1.0%", "14.1", "frontier enumeration"],
-  ["hybrid", "72.8%", "69.7", "symbolic + exact"],
-  ["strategy CNN", "71.2%", "68.1", "strategy channels"],
-  ["strategy CNN hybrid", "75.4%", "71.4", "model rank + proof"],
+  ["random", "0.0%", "4.8", "uniform valid move"],
+  ["local heuristic", "33.0%", "10.9", "clue count"],
+  ["symbolic", "87.6%", "19.2", "constraint proof"],
+  ["exact", "86.2%", "18.6", "frontier enumeration"],
+  ["hybrid", "90.6%", "19.7", "symbolic + exact"],
+  ["strategy CNN", "88.8%", "19.2", "strategy channels"],
+  ["strategy CNN hybrid", "91.0%", "19.7", "model rank + proof"],
 ];
 
 const ablationRows = [
@@ -27,22 +27,22 @@ export default function BenchmarksPage() {
       <SiteNav active="benchmarks" />
       <section className="inner-heading benchmark-heading">
         <h1>Benchmarks</h1>
-        <p>500 intermediate boards, 16 × 16, 40 mines. Every agent sees the same seeds from 70000 through 70499.</p>
+        <p>500 beginner boards, 9 × 9, 10 mines. Every agent sees the same seeds from 20000 through 20499.</p>
       </section>
 
       <section className="benchmark-highlight corner-ticks" style={highlightStyle} aria-label="Best observed result">
         <div>
           <span>best win rate</span>
-          <strong>75.4%</strong>
+          <strong>91.0%</strong>
         </div>
-        <p>Strategy CNN hybrid on the held-out intermediate board set.</p>
+        <p>Strategy CNN hybrid on the held-out 10-mine board set.</p>
       </section>
 
       <section className="strategy-study" aria-labelledby="strategy-study-title">
         <div className="strategy-study-copy">
-          <span>strategy channel ablation</span>
-          <h2 id="strategy-study-title">Same data, clearer estimates.</h2>
-          <p>The control and strategy models use the same intermediate training data. The strategy model adds three playbook-derived channels.</p>
+          <span>intermediate extension</span>
+          <h2 id="strategy-study-title">The harder board check.</h2>
+          <p>The same control and strategy models also ran on 16 × 16 boards with 40 mines. The strategy model adds three playbook-derived channels.</p>
         </div>
         <div className="strategy-matrix" role="table" aria-label="Control and strategy model comparison">
           <div className="strategy-matrix-row strategy-matrix-head" role="row">
@@ -54,7 +54,7 @@ export default function BenchmarksPage() {
             </div>
           ))}
         </div>
-        <p className="strategy-method">Lower is better for Brier score and expected calibration error. All values use the same held-out evaluation split.</p>
+        <p className="strategy-method">Lower is better for Brier score and expected calibration error. This separate test uses 500 held-out intermediate boards.</p>
       </section>
 
       <section className="benchmark-table-wrap" aria-label="Agent benchmark results">
