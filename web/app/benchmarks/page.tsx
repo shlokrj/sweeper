@@ -100,7 +100,7 @@ export default function BenchmarksPage() {
               <span><i className="key-control" /> control</span>
               <span><i className="key-strategy" /> strategy</span>
             </div>
-            <p className="strategy-method">Lower is better for Brier score and expected calibration error. 500 held-out intermediate boards.</p>
+            <p className="strategy-method"><span>Lower is better for Brier score and expected calibration error.</span><span>500 held-out intermediate boards.</span></p>
           </div>
         </section>
       </Reveal>
