@@ -79,6 +79,7 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.match(benchmarks, /<span>The harder<\/span><span>board check\.<\/span>/);
   assert.match(benchmarks, /\+5\.2 pp/);
   assert.match(benchmarks, /expected calibration error/i);
+  assert.match(benchmarks, /<span>500 held-out intermediate boards\.<\/span>/);
   assert.match(styles, /\.strategy-study \{ display: grid;/);
   assert.match(styles, /\.figure-column/);
   assert.match(styles, /\.strategy-study h2 span \{ display: block;/);
