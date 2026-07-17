@@ -56,9 +56,9 @@ export default function BenchmarksPage() {
       </Reveal>
 
       <Reveal>
-        <section className="strategy-study" aria-labelledby="strategy-study-title">
+        <section className="strategy-study corner-ticks" aria-labelledby="strategy-study-title">
           <div className="strategy-study-copy">
-            <h2 id="strategy-study-title">The harder board check.</h2>
+            <h2 id="strategy-study-title"><span>The harder</span><span>board check.</span></h2>
             <p>The same control and strategy models also ran on 16 × 16 boards with 40 mines. The strategy model adds three playbook-derived channels.</p>
           </div>
           <div className="strategy-figures" aria-label="Control and strategy model comparison">
@@ -71,13 +71,13 @@ export default function BenchmarksPage() {
                   </div>
                   <div>
                     <div className="figure-plot">
-                      {figure.groups.map((group) => (
+                      {figure.groups.map((group, groupIndex) => (
                         <div className="figure-columns" key={group.name}>
-                          <div className="figure-column">
+                          <div className="figure-column" style={{ "--column-delay": `${groupIndex * 220}ms` } as CSSProperties}>
                             <em>{group.controlLabel}</em>
                             <i style={{ "--h": `${(group.control / figure.max) * 100}%` } as CSSProperties} />
                           </div>
-                          <div className="figure-column is-strategy">
+                          <div className="figure-column is-strategy" style={{ "--column-delay": `${groupIndex * 220 + 110}ms` } as CSSProperties}>
                             <em>{group.strategyLabel}</em>
                             <i style={{ "--h": `${(group.strategy / figure.max) * 100}%` } as CSSProperties} />
                           </div>
@@ -100,8 +100,8 @@ export default function BenchmarksPage() {
               <span><i className="key-control" /> control</span>
               <span><i className="key-strategy" /> strategy</span>
             </div>
+            <p className="strategy-method">Lower is better for Brier score and expected calibration error. 500 held-out intermediate boards.</p>
           </div>
-          <p className="strategy-method">Lower is better for Brier score and expected calibration error. 500 held-out intermediate boards.</p>
         </section>
       </Reveal>
 
