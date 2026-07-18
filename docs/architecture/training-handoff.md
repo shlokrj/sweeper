@@ -37,6 +37,8 @@ make train PYTHON=.venv/bin/python DATASET=data/beginner-strategy-labels.npz CHE
 
 Use the strategy data set for both training and calibration. The first-click policy remains part of the experiment configuration.
 
+`--augment-symmetries` uses all eight rotations and reflections on square boards. On rectangular boards it uses identity, 180-degree rotation, horizontal reflection, and vertical reflection so tensor dimensions remain fixed.
+
 ## resume after interruption
 
 New checkpoints store the current model, the best validation model, optimizer state, and completed epoch. Resume to the original total epoch count with the same checkpoint path:
