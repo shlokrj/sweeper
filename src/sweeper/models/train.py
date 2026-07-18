@@ -11,7 +11,7 @@ import torch
 from torch.nn import functional as functional
 from torch.utils.data import DataLoader, Dataset, Subset
 
-from sweeper.models.augment import RandomSquareSymmetryDataset
+from sweeper.models.augment import RandomBoardSymmetryDataset
 from sweeper.models.cnn import MineProbabilityCNN
 from sweeper.models.strategy import STRATEGY_FEATURE_CHANNELS, encode_strategy_features
 
@@ -91,7 +91,7 @@ def main() -> None:
     train_indices, validation_indices = _split_seed_indices(dataset.seeds, arguments.seed)
     train_dataset: Dataset[tuple[torch.Tensor, ...]] = Subset(dataset, train_indices)
     if arguments.augment_symmetries:
-        train_dataset = RandomSquareSymmetryDataset(train_dataset)
+        train_dataset = RandomBoardSymmetryDataset(train_dataset)
     train_loader = DataLoader(train_dataset, batch_size=arguments.batch_size, shuffle=True)
     validation_loader = DataLoader(
         Subset(dataset, validation_indices), batch_size=arguments.batch_size
