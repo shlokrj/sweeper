@@ -39,6 +39,10 @@ Use the strategy data set for both training and calibration. The first-click pol
 
 `--augment-symmetries` uses all eight rotations and reflections on square boards. On rectangular boards it uses identity, 180-degree rotation, horizontal reflection, and vertical reflection so tensor dimensions remain fixed.
 
+## expert paired study
+
+The expert study uses 16×30 boards with 99 mines. Train the control and strategy checkpoints from the same archive, then evaluate both on a separate 500-board seed range. The full protocol, commands, and decision gate are in `docs/research/expert-experiment.md`. The versioned settings are in `configs/training/expert.toml`.
+
 ## resume after interruption
 
 New checkpoints store the current model, the best validation model, optimizer state, and completed epoch. Resume to the original total epoch count with the same checkpoint path:
