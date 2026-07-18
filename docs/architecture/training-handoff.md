@@ -85,3 +85,15 @@ make calibrate PYTHON=.venv/bin/python DATASET=data/beginner-strategy-labels.npz
 ```
 
 The report records Brier score, mean absolute error, expected calibration error, and per-bin predicted and exact mine probabilities.
+
+## compact preset summary
+
+After paired runs finish, create one smaller JSON summary without per-game traces. This becomes the stable input for research notes and the web interface.
+
+```bash
+.venv/bin/python -m sweeper.reporting \
+  --preset expert \
+  --label control --benchmark artifacts/benchmark-expert-control.json --calibration artifacts/calibration-expert-control.json \
+  --label strategy --benchmark artifacts/benchmark-expert-strategy.json --calibration artifacts/calibration-expert-strategy.json \
+  --output artifacts/summary-expert.json
+```
