@@ -1,0 +1,31 @@
+[dataset]
+rows = 16
+columns = 30
+mines = 99
+games = 20000
+seed_start = 90000
+max_steps = 200
+max_component_size = 18
+initial_click = "seeded_uniform"
+
+[training]
+epochs = 80
+batch_size = 256
+learning_rate = 0.0003
+width = 64
+residual_blocks = 4
+seed = 0
+augment_symmetries = true
+
+[control]
+checkpoint = "artifacts/cnn-expert-control.pt"
+strategy_features = false
+
+[strategy]
+checkpoint = "artifacts/cnn-expert-strategy.pt"
+strategy_features = true
+
+[evaluation]
+games = 500
+seed_start = 120000
+max_component_size = 18
