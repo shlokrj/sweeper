@@ -64,8 +64,8 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.match(demo, /autoSpeeds/);
   assert.match(demo, /overdrive/);
   assert.match(demo, /PRESETS\[presetId\]/);
-  assert.match(demo, /DEPLOYMENT_POLICIES/);
-  assert.match(demo, /deployment policy/);
+  assert.match(demo, /MODEL_API_URL/);
+  assert.match(demo, /local model service/);
   assert.match(demo, /board-lock/);
   assert.match(demo, /run auto/);
   assert.match(demo, /MineMark/);
@@ -73,7 +73,7 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.match(demo, /board-confetti/);
   assert.doesNotMatch(styles, /\.flag-toggle/);
   assert.match(styles, /\.auto-speed-stops/);
-  assert.match(styles, /\.deployment-policy/);
+  assert.doesNotMatch(styles, /\.deployment-policy/);
   assert.match(styles, /overdrive-rail/);
   assert.match(styles, /mine-pop/);
   assert.match(engine, /chordCell/);
@@ -86,6 +86,7 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.match(demo, /is-scanline/);
   assert.match(demo, /play this move/);
   assert.match(benchmarks, /91\.0%/);
+  assert.match(benchmarks, /35\.4%/);
   assert.match(benchmarks, /seeds from 20000 through 20499/);
   assert.match(benchmarks, /<span>The harder<\/span><span>board check\.<\/span>/);
   assert.match(benchmarks, /\+5\.2 pp/);

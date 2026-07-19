@@ -51,7 +51,7 @@ export default function BenchmarksPage() {
             <span>best win rate</span>
             <strong>91.0%</strong>
           </div>
-          <p>Strategy CNN hybrid on the held-out 10-mine board set.</p>
+          <p>Strategy CNN hybrid on 500 held-out 10-mine boards. The expert control hybrid reached 35.4% on an independent 500-board confirmation set.</p>
         </section>
       </Reveal>
 

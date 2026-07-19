@@ -8,21 +8,6 @@ export type PresetId = keyof typeof PRESETS;
 export type BoardPreset = (typeof PRESETS)[PresetId];
 export type Status = "ready" | "playing" | "won" | "lost";
 
-export const DEPLOYMENT_POLICIES = {
-  easy: {
-    assisted: { detail: "91.0% held-out win rate", kind: "strategy", label: "strategy hybrid" },
-    auto: { detail: "91.0% held-out win rate", kind: "strategy", label: "strategy hybrid" },
-  },
-  medium: {
-    assisted: { detail: "75.4% held-out win rate", kind: "strategy", label: "strategy hybrid" },
-    auto: { detail: "75.4% held-out win rate", kind: "strategy", label: "strategy hybrid" },
-  },
-  hard: {
-    assisted: { detail: "28.5% lower Brier error", kind: "strategy", label: "strategy risk" },
-    auto: { detail: "35.4% confirmed win rate", kind: "control", label: "control hybrid" },
-  },
-} as const;
-
 export type Cell = {
   adjacent: number;
   exploded: boolean;
