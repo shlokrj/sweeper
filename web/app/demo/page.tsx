@@ -19,27 +19,6 @@ import {
 } from "../components/minesweeper";
 
 type PlayMode = "manual" | "assisted" | "auto";
-type ModelStatus = "idle" | "loading" | "ready" | "unavailable";
-type ModelMove = {
-  action: number;
-  mine_risk: number | null;
-  rationale: string;
-  source: string;
-};
-type ModelState = {
-  key: string;
-  move: ModelMove | null;
-  status: Exclude<ModelStatus, "idle">;
-};
-type Recommendation = {
-  evidence: string;
-  index: number;
-  label: "approximate" | "exact" | "model" | "proof" | "proven";
-  method: string;
-  risk: number;
-};
-
-const MODEL_API_URL = "http://127.0.0.1:8001";
 
 const blastPixels = [
   [-13, -13, 5, "#e6c472"], [-4, -16, 6, "#dd8582"], [8, -11, 5, "#e6c472"],
@@ -58,20 +37,6 @@ const autoSpeeds = [
   { id: "overdrive", label: "overdrive", delay: 55 },
 ] as const;
 
-function visibleBoard(game: Game) {
-  return game.board.map((cell) => (cell.flagged ? -2 : cell.revealed ? cell.adjacent : -1));
-}
-
-function modelRecommendation(move: ModelMove): Recommendation {
-  if (move.source.includes("symbolic")) {
-    return { evidence: move.rationale, index: move.action, label: "proof", method: "constraint proof", risk: 0 };
-  }
-  if (move.source.includes("exact")) {
-    return { evidence: move.rationale, index: move.action, label: "exact", method: "exact probability", risk: move.mine_risk ?? 0 };
-  }
-  return { evidence: move.rationale, index: move.action, label: "model", method: "learned mine risk", risk: move.mine_risk ?? 0 };
-}
-
 export default function DemoPage() {
   const [game, setGame] = useState<Game>(() => newGame(0));
   const [mode, setMode] = useState<PlayMode>("assisted");
@@ -79,7 +44,6 @@ export default function DemoPage() {
   const [hovered, setHovered] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [autoSpeedIndex, setAutoSpeedIndex] = useState(2);
-  const [modelState, setModelState] = useState<ModelState>({ key: "", move: null, status: "loading" });
 
   useEffect(() => {
     if (game.status !== "playing") return undefined;
@@ -88,64 +52,14 @@ export default function DemoPage() {
   }, [game.status]);
 
   const showAssistance = mode !== "manual";
-  const visibleState = useMemo(() => visibleBoard(game), [game]);
-  const boardKey = `${game.id}:${mode}:${visibleState.join(",")}`;
   const flaggedCount = game.board.filter((cell) => cell.flagged).length;
   const minesLeft = game.preset.mines - flaggedCount;
   const finished = game.status === "won" || game.status === "lost";
-  const activeModelState = modelState.key === boardKey ? modelState : null;
-  const modelMove = activeModelState?.move ?? null;
-  const modelStatus: ModelStatus = activeModelState?.status ?? (showAssistance && !finished ? "loading" : "idle");
-  const serviceStatus = mode === "manual"
-    ? "manual play"
-    : modelStatus === "ready"
-      ? "local model ready"
-      : modelStatus === "unavailable"
-        ? "local model offline"
-        : "checking local model";
   const analysis = useMemo(
     () => (showAssistance ? analyze(game.board, game.status, game.preset) : hiddenAnalysis),
     [game.board, game.preset, game.status, showAssistance],
   );
-  useEffect(() => {
-    if (!showAssistance || finished) return undefined;
-
-    const controller = new AbortController();
-    void fetch(`${MODEL_API_URL}/move`, {
-      body: JSON.stringify({
-        board: visibleState,
-        columns: game.preset.columns,
-        mines: game.preset.mines,
-        mode,
-        remaining_mines: minesLeft,
-        rows: game.preset.rows,
-      }),
-      headers: { "Content-Type": "application/json" },
-      method: "POST",
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("local model service is unavailable");
-        return response.json() as Promise<ModelMove>;
-      })
-      .then((move) => {
-        if (!Number.isInteger(move.action)) throw new Error("local model returned an invalid action");
-        setModelState({ key: boardKey, move, status: "ready" });
-      })
-      .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        setModelState({ key: boardKey, move: null, status: "unavailable" });
-      });
-    return () => controller.abort();
-  }, [boardKey, finished, game.preset, minesLeft, mode, showAssistance, visibleState]);
-
-  const recommendation: Recommendation | null = showAssistance
-    ? modelMove
-      ? modelRecommendation(modelMove)
-      : modelStatus === "unavailable"
-        ? analysis.recommendation
-        : null
-    : null;
+  const recommendation = analysis.recommendation;
   const recommendedCoordinate = recommendation ? coordinate(recommendation.index, game.preset) : null;
   const columnLabels = Array.from({ length: game.preset.columns }, (_, index) => columnLabel(index));
   const rowLabels = Array.from({ length: game.preset.rows }, (_, index) => index + 1);
@@ -241,7 +155,6 @@ export default function DemoPage() {
       <section className="inner-heading demo-heading">
         <h1>Demo</h1>
         <p>Play a real board. The panel shows the proof, or the honest risk, behind the next move.</p>
-        <span className={`demo-service-status is-${modelStatus}`} role="status"><i aria-hidden="true" />{serviceStatus}</span>
       </section>
 
       <section className="demo-surface corner-ticks" aria-label="Playable Minesweeper demo">
@@ -373,8 +286,6 @@ export default function DemoPage() {
                 <span className={`evidence-chip ${recommendation.label === "approximate" ? "evidence-chip-approximate" : recommendation.label === "model" || recommendation.label === "exact" ? "evidence-chip-model" : ""}`}>{recommendation.label}</span>
                 <p className={`decision-risk ${recommendation.label === "approximate" ? "decision-risk-approximate" : recommendation.label === "model" || recommendation.label === "exact" ? "decision-risk-model" : ""}`}>{(recommendation.risk * 100).toFixed(1)}% mine risk</p>
               </div>
-            ) : modelStatus === "loading" ? (
-              <div className="decision-verdict" role="status"><span className="evidence-chip evidence-chip-loading">checking</span></div>
             ) : (
               <div className="decision-verdict" key={`verdict-${game.id}-${game.status}`}>
                 <span className={`evidence-chip ${game.status === "lost" ? "evidence-chip-lost" : ""}`}>{game.status === "won" ? "board cleared" : "mine hit"}</span>
@@ -435,17 +346,13 @@ export default function DemoPage() {
                     : "Auto is paused. Press run auto to let the agent take the board."
                   : recommendation
                     ? recommendation.evidence
-                    : modelStatus === "loading"
-                      ? "Checking the selected local model against the visible board."
-                      : modelStatus === "unavailable"
-                        ? "The local model service is offline. Visible-board reasoning is guiding this move instead."
                     : game.status === "won"
                       ? "Every safe cell is revealed and every mine is flagged."
                       : "A mine ended this run. The board stays open for inspection."}
             </p>
             {showAssistance ? (
               <dl>
-                <div><dt>method</dt><dd>{recommendation ? recommendation.method : modelStatus === "loading" ? "checking local model" : "game over"}</dd></div>
+                <div><dt>method</dt><dd>{recommendation ? recommendation.method : "game over"}</dd></div>
                 <div><dt>frontier</dt><dd>{analysis.frontier.length} {analysis.frontier.length === 1 ? "candidate" : "candidates"}</dd></div>
                 <div><dt>proven</dt><dd>{analysis.provenSafe.size} safe · {analysis.provenMines.size} {analysis.provenMines.size === 1 ? "mine" : "mines"}</dd></div>
               </dl>

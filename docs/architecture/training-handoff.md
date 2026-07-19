@@ -111,13 +111,3 @@ assist_checkpoint = policy.checkpoint_for(ModelPurpose.ASSISTED)
 ```
 
 Beginner and intermediate use their strategy checkpoints for both modes. Expert auto-play uses the higher-win-rate control checkpoint. Expert assistance uses the better-calibrated strategy checkpoint.
-
-## local model service
-
-Run the selected checkpoints for the local demo with:
-
-```bash
-make serve-model PYTHON=.venv/bin/python
-```
-
-The service listens on `127.0.0.1:8001`. `POST /move` accepts only visible-state values, standard preset dimensions, mine count, remaining mine count, and `assisted` or `auto` mode. It returns one reveal action with its source, mine-risk estimate, and rationale. It never accepts or returns hidden mine locations and never asks the browser to place flags.
