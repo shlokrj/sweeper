@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { FlagMark } from "./components/flag-mark";
 import { SiteNav } from "./components/site-nav";
+import { Reveal } from "./components/reveal";
 import { ditherMask, erosionEdge } from "./components/pixel-texture";
 
 type HeroCell = "covered" | "clear" | "flag" | "one" | "two" | "three";
@@ -131,6 +132,7 @@ export default function Home() {
         </div>
       </section>
 
+      <Reveal>
       <section className="home-methods" aria-label="Methods used by Sweeper">
         <article>
           <span className="method-dot method-dot-green" />
@@ -148,6 +150,7 @@ export default function Home() {
           <p>Rank the remaining safe moves.</p>
         </article>
       </section>
+      </Reveal>
 
       <footer className="site-footer">
         <span>sweeper</span>
