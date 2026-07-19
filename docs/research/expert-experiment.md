@@ -58,3 +58,16 @@ Repeat both commands with the strategy checkpoint and corresponding output paths
 Keep a learned expert policy only if its neural-hybrid win rate exceeds the non-neural hybrid by at least two percentage points on the shared 500-board test and its Brier score improves. Otherwise, keep the symbolic and exact hybrid as the expert default.
 
 If neither expert model passes, the next experiment is a mixed-size model or a graph baseline. Do not treat a beginner or intermediate win rate as evidence for expert performance.
+
+## Results
+
+The paired study completed on the fixed 500-board held-out range. Both learned hybrids beat the non-neural hybrid by more than the two-point threshold. The control model has the stronger win rate. The strategy model has the stronger risk estimates.
+
+| Model | Neural | Neural hybrid | Hybrid lift | Brier | Mean absolute error | Expected calibration error |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| control | 25.0% | 32.0% | +7.4 pp | 0.0000312 | 0.002577 | 0.000224 |
+| strategy | 22.2% | 29.6% | +5.0 pp | 0.0000223 | 0.002385 | 0.000136 |
+
+The strategy channels reduce Brier score by 28.5%, mean absolute error by 7.5%, and expected calibration error by 39.3% relative to the shared-data control. They do not improve expert-board win rate.
+
+The strategy model clears the gate because it improves Brier score and its hybrid beats the non-neural hybrid by five points. Use the control neural-hybrid for autonomous expert play, where it wins 2.4 points more. Use the strategy checkpoint when calibrated mine-risk estimates matter more than maximum win rate.
