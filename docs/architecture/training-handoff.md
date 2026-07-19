@@ -97,3 +97,17 @@ After paired runs finish, create one smaller JSON summary without per-game trace
   --label strategy --benchmark artifacts/benchmark-expert-strategy.json --calibration artifacts/calibration-expert-strategy.json \
   --output artifacts/summary-expert.json
 ```
+
+## measured preset policy
+
+`sweeper.presets` maps only the three studied board configurations to checkpoints. It rejects unstudied shapes and mine counts rather than silently reusing a model outside its evaluation range.
+
+```python
+from sweeper.presets import ModelPurpose, preset_for_board
+
+policy = preset_for_board(rows=16, columns=30, mines=99)
+autoplay_checkpoint = policy.checkpoint_for()
+assist_checkpoint = policy.checkpoint_for(ModelPurpose.ASSISTED)
+```
+
+Beginner and intermediate use their strategy checkpoints for both modes. Expert auto-play uses the higher-win-rate control checkpoint. Expert assistance uses the better-calibrated strategy checkpoint.
