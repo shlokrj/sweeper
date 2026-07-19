@@ -31,6 +31,7 @@ const hiddenAnalysis = { frontier: [], provenMines: new Map<number, string>(), p
 export default function DemoPage() {
   const [game, setGame] = useState<Game>(() => newGame(0));
   const [mode, setMode] = useState<PlayMode>("assisted");
+  const [autoFlag, setAutoFlag] = useState(true);
   const [autoRunning, setAutoRunning] = useState(false);
   const [hovered, setHovered] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
@@ -58,6 +59,7 @@ export default function DemoPage() {
   const activeRow = activeCoordinate.match(/\d+/)?.[0] ?? "";
   const finished = game.status === "won" || game.status === "lost";
   const locked = mode === "auto" && !finished;
+  const pendingFlags = autoFlag ? [...analysis.provenMines.keys()].filter((index) => !game.board[index].flagged) : [];
   const boardStyle = {
     "--board-columns": game.preset.columns,
     "--board-rows": game.preset.rows,
@@ -104,24 +106,28 @@ export default function DemoPage() {
   }
 
   function playRecommendation() {
+    if (pendingFlags.length > 0) {
+      setGame((current) => pendingFlags.reduce((next, index) => toggleFlag(next, index), current));
+      return;
+    }
     if (recommendation) handleReveal(recommendation.index);
-  }
-
-  function playAutoStep() {
-    setGame((current) => {
-      if (current.status === "won" || current.status === "lost") return current;
-      const currentAnalysis = analyze(current.board, current.status, current.preset);
-      const mineToFlag = [...currentAnalysis.provenMines.keys()].find((index) => !current.board[index].flagged);
-      if (mineToFlag !== undefined) return toggleFlag(current, mineToFlag);
-      return currentAnalysis.recommendation ? revealCell(current, currentAnalysis.recommendation.index) : current;
-    });
   }
 
   useEffect(() => {
     if (mode !== "auto" || !autoRunning || finished) return undefined;
-    const timer = window.setTimeout(playAutoStep, autoDelay);
+    const timer = window.setTimeout(() => {
+      setGame((current) => {
+        if (current.status === "won" || current.status === "lost") return current;
+        const currentAnalysis = analyze(current.board, current.status, current.preset);
+        if (autoFlag) {
+          const mineToFlag = [...currentAnalysis.provenMines.keys()].find((index) => !current.board[index].flagged);
+          if (mineToFlag !== undefined) return toggleFlag(current, mineToFlag);
+        }
+        return currentAnalysis.recommendation ? revealCell(current, currentAnalysis.recommendation.index) : current;
+      });
+    }, autoDelay);
     return () => window.clearTimeout(timer);
-  }, [autoDelay, autoRunning, finished, game.board, game.id, mode]);
+  }, [autoDelay, autoFlag, autoRunning, finished, game.board, game.id, mode]);
 
   return (
     <main className="site-page inner-page">
@@ -227,6 +233,13 @@ export default function DemoPage() {
               <button className={mode === option ? "is-active" : ""} key={option} onClick={() => selectMode(option)} type="button">{option}</button>
             ))}
           </div>
+          {showAssistance ? (
+            <button aria-pressed={autoFlag} className={`flag-toggle ${autoFlag ? "is-on" : ""}`} onClick={() => setAutoFlag((current) => !current)} type="button">
+              <FlagMark compact />
+              <span>agent flags proven mines</span>
+              <em>{autoFlag ? "on" : "off"}</em>
+            </button>
+          ) : null}
           <p className="decision-label">{mode === "manual" ? "inspecting" : mode === "auto" ? "auto move" : "next move"}</p>
           <div className={`decision-coordinate ${mode === "manual" && !finished ? "decision-coordinate-manual" : ""}`} key={`coordinate-${game.id}-${mode}-${recommendedCoordinate ?? game.status}`}>
             {finished ? (game.status === "won" ? ":)" : ":(") : mode === "manual" ? hovered ?? "+" : recommendedCoordinate ?? "+"}
@@ -244,7 +257,7 @@ export default function DemoPage() {
             )
           ) : null}
           <div className={`decision-actions ${mode === "manual" ? "decision-actions-single" : ""}`} role="group" aria-label="Board actions">
-            {mode === "assisted" ? <button disabled={!recommendation} onClick={playRecommendation} type="button">play this move</button> : null}
+            {mode === "assisted" ? <button disabled={!recommendation && pendingFlags.length === 0} onClick={playRecommendation} type="button">{pendingFlags.length > 0 ? "flag proven mines" : "play this move"}</button> : null}
             {mode === "auto" ? (
               <button disabled={finished} onClick={() => setAutoRunning((running) => !running)} type="button">
                 {autoRunning ? "pause" : "run auto"} <span aria-hidden="true">{autoRunning ? "❚❚" : "▶"}</span>
@@ -265,7 +278,9 @@ export default function DemoPage() {
                 ? "Assistance is off. Proofs and mine risk stay hidden while you play."
                 : mode === "auto"
                   ? autoRunning
-                    ? "Auto flags proven mines, then plays the next recommended cell at the selected speed."
+                    ? autoFlag
+                      ? "Auto flags proven mines, then plays the next recommended cell at the selected speed."
+                      : "Auto plays the next recommended cell at the selected speed without flagging."
                     : "Auto is paused. Press run auto to let the agent take the board."
                   : recommendation
                     ? recommendation.evidence
