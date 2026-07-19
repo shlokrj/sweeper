@@ -21,4 +21,6 @@ Each model was evaluated on the same 500 seeds, 20000 through 20499. The hybrid 
 
 Neither beginner-trained CNN transfers reliably to expert boards. The control adds a small gain to the hybrid agent on both larger presets. The strategy-aware checkpoint harms hybrid play by 12.4 points on intermediate boards and 18.8 points on expert boards.
 
-Use the current strategy-aware checkpoint only for 9×9 beginner boards. The next model experiment should train on a board-size mixture or separate intermediate and expert datasets, then repeat the same seed-matched benchmarks and calibration checks.
+This is a zero-shot baseline, not the current result for either larger preset. Separate in-distribution intermediate and expert studies now use matched archives, fixed held-out seeds, and calibration reports. See `docs/research/expert-experiment.md` for the expert result.
+
+Use the original beginner strategy checkpoint only on 9×9 beginner boards. A future generalization study can test a mixed-size model or graph baseline against these zero-shot baselines.
