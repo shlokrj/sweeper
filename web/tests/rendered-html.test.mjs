@@ -44,8 +44,8 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.doesNotMatch(navigation, /href="\/play"/);
   assert.match(engine, /safeZone/);
   assert.match(engine, /easy: \{[^}]*columns: 9/);
-  assert.match(engine, /medium: \{[^}]*columns: 18/);
-  assert.match(engine, /hard: \{[^}]*columns: 24/);
+  assert.match(engine, /medium: \{[^}]*columns: 16/);
+  assert.match(engine, /hard: \{[^}]*columns: 30/);
   assert.match(engine, /mines: 99/);
   assert.match(engine, /breakMax/);
   assert.match(engine, /openingSize/);

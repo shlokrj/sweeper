@@ -1,7 +1,7 @@
 export const PRESETS = {
-  easy: { breakMax: 20, breakMin: 6, columns: 9, id: "easy", label: "Easy", mines: 10, rows: 9 },
-  medium: { breakMax: 70, breakMin: 10, columns: 18, id: "medium", label: "Medium", mines: 40, rows: 14 },
-  hard: { breakMax: 130, breakMin: 12, columns: 24, id: "hard", label: "Hard", mines: 99, rows: 20 },
+  easy: { breakMax: 20, breakMin: 6, columns: 9, id: "easy", label: "Beginner", mines: 10, rows: 9 },
+  medium: { breakMax: 70, breakMin: 10, columns: 16, id: "medium", label: "Intermediate", mines: 40, rows: 16 },
+  hard: { breakMax: 130, breakMin: 12, columns: 30, id: "hard", label: "Expert", mines: 99, rows: 16 },
 } as const;
 
 export type PresetId = keyof typeof PRESETS;
