@@ -6,6 +6,7 @@ import { LockMark } from "../components/lock-mark";
 import { MineMark } from "../components/mine-mark";
 import { SiteNav } from "../components/site-nav";
 import {
+  DEPLOYMENT_POLICIES,
   PRESETS,
   analyze,
   chordCell,
@@ -71,6 +72,7 @@ export default function DemoPage() {
   const autoDelay = autoSpeed.delay;
   const autoSpeedFill = (autoSpeedIndex / (autoSpeeds.length - 1)) * 100;
   const isOverdrive = autoSpeed.id === "overdrive";
+  const activePolicy = DEPLOYMENT_POLICIES[game.preset.id][mode === "auto" ? "auto" : "assisted"];
   const explodedIndex = game.status === "lost" ? game.board.findIndex((cell) => cell.exploded) : -1;
   const confetti = useMemo(() => {
     if (game.status !== "won") return [];
@@ -277,6 +279,13 @@ export default function DemoPage() {
               <button className={mode === option ? "is-active" : ""} key={option} onClick={() => selectMode(option)} type="button">{option}</button>
             ))}
           </div>
+          {mode !== "manual" ? (
+            <div className={`deployment-policy is-${activePolicy.kind}`} aria-label={`Active deployment policy: ${activePolicy.label}`}>
+              <span>deployment policy</span>
+              <strong>{activePolicy.label}</strong>
+              <p>{activePolicy.detail}</p>
+            </div>
+          ) : null}
           <p className="decision-label">{mode === "manual" ? "inspecting" : mode === "auto" ? "auto move" : "next move"}</p>
           <div className={`decision-coordinate ${mode === "manual" && !finished ? "decision-coordinate-manual" : ""}`} key={`coordinate-${game.id}-${mode}-${recommendedCoordinate ?? game.status}`}>
             {finished ? (game.status === "won" ? ":)" : ":(") : mode === "manual" ? hovered ?? "+" : recommendedCoordinate ?? "+"}
