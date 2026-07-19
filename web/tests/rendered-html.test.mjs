@@ -65,6 +65,10 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.match(demo, /board-lock/);
   assert.match(demo, /run auto/);
   assert.match(demo, /MineMark/);
+  assert.match(demo, /agent flags proven mines/);
+  assert.match(demo, /board-confetti/);
+  assert.match(styles, /\.flag-toggle/);
+  assert.match(styles, /mine-pop/);
   assert.match(engine, /chordCell/);
   assert.match(engine, /provenSafe/);
   assert.match(demo, /revealCell|handleReveal/);
