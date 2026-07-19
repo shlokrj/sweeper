@@ -28,13 +28,22 @@ const blastPixels = [
 
 const hiddenAnalysis = { frontier: [], provenMines: new Map<number, string>(), provenSafe: new Map<number, string>(), recommendation: null };
 
+const autoSpeeds = [
+  { id: "crawl", label: "crawl", delay: 1_200 },
+  { id: "slow", label: "slow", delay: 820 },
+  { id: "steady", label: "steady", delay: 560 },
+  { id: "fast", label: "fast", delay: 340 },
+  { id: "rapid", label: "rapid", delay: 180 },
+  { id: "overdrive", label: "overdrive", delay: 55 },
+] as const;
+
 export default function DemoPage() {
   const [game, setGame] = useState<Game>(() => newGame(0));
   const [mode, setMode] = useState<PlayMode>("assisted");
   const [autoRunning, setAutoRunning] = useState(false);
   const [hovered, setHovered] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
-  const [autoDelay, setAutoDelay] = useState(600);
+  const [autoSpeedIndex, setAutoSpeedIndex] = useState(2);
 
   useEffect(() => {
     if (game.status !== "playing") return undefined;
@@ -58,6 +67,10 @@ export default function DemoPage() {
   const activeRow = activeCoordinate.match(/\d+/)?.[0] ?? "";
   const finished = game.status === "won" || game.status === "lost";
   const locked = mode === "auto" && !finished;
+  const autoSpeed = autoSpeeds[autoSpeedIndex];
+  const autoDelay = autoSpeed.delay;
+  const autoSpeedFill = (autoSpeedIndex / (autoSpeeds.length - 1)) * 100;
+  const isOverdrive = autoSpeed.id === "overdrive";
   const explodedIndex = game.status === "lost" ? game.board.findIndex((cell) => cell.exploded) : -1;
   const confetti = useMemo(() => {
     if (game.status !== "won") return [];
@@ -283,18 +296,44 @@ export default function DemoPage() {
           <div className={`decision-actions ${mode === "manual" ? "decision-actions-single" : ""}`} role="group" aria-label="Board actions">
             {mode === "assisted" ? <button disabled={!recommendation} onClick={playRecommendation} type="button">play this move</button> : null}
             {mode === "auto" ? (
-              <button disabled={finished} onClick={() => setAutoRunning((running) => !running)} type="button">
+              <button className={isOverdrive ? "is-overdrive" : ""} disabled={finished} onClick={() => setAutoRunning((running) => !running)} type="button">
                 {autoRunning ? "pause" : "run auto"} <span aria-hidden="true">{autoRunning ? "❚❚" : "▶"}</span>
               </button>
             ) : null}
             <button onClick={reset} type="button">new board <span aria-hidden="true">↻</span></button>
           </div>
           {mode === "auto" ? (
-            <label className="auto-speed">
-              <span>slow</span>
-              <input aria-label="Auto play speed" max="1400" min="250" onChange={(event) => setAutoDelay(1650 - Number(event.target.value))} step="50" type="range" value={1650 - autoDelay} />
-              <output>{autoDelay < 550 ? "fast" : autoDelay < 950 ? "steady" : "slow"}</output>
-            </label>
+            <div className={`auto-speed ${isOverdrive ? "is-overdrive" : ""}`} style={{ "--speed-fill": `${autoSpeedFill}%` } as CSSProperties}>
+              <label>
+                <span className="auto-speed-caption">speed</span>
+                <span className="auto-speed-rail">
+                  <input
+                    aria-label={`Auto play speed: ${autoSpeed.label}`}
+                    max={autoSpeeds.length - 1}
+                    min="0"
+                    onChange={(event) => setAutoSpeedIndex(Number(event.target.value))}
+                    step="1"
+                    type="range"
+                    value={autoSpeedIndex}
+                  />
+                  {autoSpeeds.map((speed, index) => (
+                    <i
+                      aria-hidden="true"
+                      className={index <= autoSpeedIndex ? "is-passed" : ""}
+                      key={speed.id}
+                      style={{ "--speed-stop": `${(index / (autoSpeeds.length - 1)) * 100}%` } as CSSProperties}
+                    />
+                  ))}
+                </span>
+                <output aria-live="polite" key={autoSpeed.id}>{autoSpeed.label}</output>
+              </label>
+              <div aria-hidden="true" className="auto-speed-stops">
+                {autoSpeeds.map((speed, index) => (
+                  <span className={index === autoSpeedIndex ? "is-active" : ""} key={speed.id}>{speed.label}</span>
+                ))}
+              </div>
+              {isOverdrive ? <p>overdrive engaged</p> : null}
+            </div>
           ) : null}
           <div className="decision-evidence" key={`evidence-${game.id}-${mode}-${recommendation?.index ?? game.status}-${game.moves}`}>
             <p>
@@ -302,7 +341,9 @@ export default function DemoPage() {
                 ? "Assistance is off. Proofs and mine risk stay hidden while you play."
                 : mode === "auto"
                   ? autoRunning
-                    ? "Auto plays the next recommended cell at the selected speed."
+                    ? isOverdrive
+                      ? "Overdrive is engaged. Auto moves at the fastest interval."
+                      : `Auto plays the next recommended cell at ${autoSpeed.label} speed.`
                     : "Auto is paused. Press run auto to let the agent take the board."
                   : recommendation
                     ? recommendation.evidence

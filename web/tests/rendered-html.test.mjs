@@ -61,6 +61,8 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.match(demo, /useState<PlayMode>\("assisted"\)/);
   assert.match(demo, /\["manual", "assisted", "auto"\]/);
   assert.match(demo, /Auto play speed/);
+  assert.match(demo, /autoSpeeds/);
+  assert.match(demo, /overdrive/);
   assert.match(demo, /PRESETS\[presetId\]/);
   assert.match(demo, /board-lock/);
   assert.match(demo, /run auto/);
@@ -68,6 +70,8 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.doesNotMatch(demo, /agent flags proven mines/);
   assert.match(demo, /board-confetti/);
   assert.doesNotMatch(styles, /\.flag-toggle/);
+  assert.match(styles, /\.auto-speed-stops/);
+  assert.match(styles, /overdrive-rail/);
   assert.match(styles, /mine-pop/);
   assert.match(engine, /chordCell/);
   assert.match(engine, /provenSafe/);
