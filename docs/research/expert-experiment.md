@@ -71,3 +71,9 @@ The paired study completed on the fixed 500-board held-out range. Both learned h
 The strategy channels reduce Brier score by 28.5%, mean absolute error by 7.5%, and expected calibration error by 39.3% relative to the shared-data control. They do not improve expert-board win rate.
 
 The strategy model clears the gate because it improves Brier score and its hybrid beats the non-neural hybrid by five points. Use the control neural-hybrid for autonomous expert play, where it wins 2.4 points more. Use the strategy checkpoint when calibrated mine-risk estimates matter more than maximum win rate.
+
+## Independent confirmation
+
+A second 500-board range, seeds 120500 through 120999, reproduced the result. The control neural-hybrid won 35.4% against 20.0% for the non-neural hybrid, a 15.4-point lift. The strategy neural-hybrid won 31.4%, an 11.4-point lift over the same hybrid.
+
+The confirmation does not change the calibration comparison because it reuses the seed-disjoint validation archive. It confirms the practical policy choice: the control checkpoint remains the expert auto-play default, while the strategy checkpoint remains the calibrated-risk option.
