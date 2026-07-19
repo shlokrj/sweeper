@@ -96,6 +96,13 @@ export default function DemoPage() {
   const activeModelState = modelState.key === boardKey ? modelState : null;
   const modelMove = activeModelState?.move ?? null;
   const modelStatus: ModelStatus = activeModelState?.status ?? (showAssistance && !finished ? "loading" : "idle");
+  const serviceStatus = mode === "manual"
+    ? "manual play"
+    : modelStatus === "ready"
+      ? "local model ready"
+      : modelStatus === "unavailable"
+        ? "local model offline"
+        : "checking local model";
   const analysis = useMemo(
     () => (showAssistance ? analyze(game.board, game.status, game.preset) : hiddenAnalysis),
     [game.board, game.preset, game.status, showAssistance],
@@ -234,6 +241,7 @@ export default function DemoPage() {
       <section className="inner-heading demo-heading">
         <h1>Demo</h1>
         <p>Play a real board. The panel shows the proof, or the honest risk, behind the next move.</p>
+        <span className={`demo-service-status is-${modelStatus}`} role="status"><i aria-hidden="true" />{serviceStatus}</span>
       </section>
 
       <section className="demo-surface corner-ticks" aria-label="Playable Minesweeper demo">
