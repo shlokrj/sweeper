@@ -60,6 +60,24 @@ export default function DemoPage() {
   const finished = game.status === "won" || game.status === "lost";
   const locked = mode === "auto" && !finished;
   const pendingFlags = autoFlag ? [...analysis.provenMines.keys()].filter((index) => !game.board[index].flagged) : [];
+  const explodedIndex = game.status === "lost" ? game.board.findIndex((cell) => cell.exploded) : -1;
+  const confetti = useMemo(() => {
+    if (game.status !== "won") return [];
+    let state = ((game.id + 1) * 9301) >>> 0;
+    const next = () => {
+      state = (state * 1664525 + 1013904223) >>> 0;
+      return state / 4294967296;
+    };
+    const colors = ["#dd8582", "#84ad83", "#84b3cf", "#e6c472"];
+    return Array.from({ length: 30 }, (_, index) => ({
+      color: colors[index % colors.length],
+      delay: Math.round(next() * 460),
+      drift: Math.round((next() - 0.5) * 70),
+      duration: 1100 + Math.round(next() * 750),
+      size: 4 + Math.round(next() * 6),
+      x: Math.round(next() * 100),
+    }));
+  }, [game.id, game.status]);
   const boardStyle = {
     "--board-columns": game.preset.columns,
     "--board-rows": game.preset.rows,
@@ -191,7 +209,12 @@ export default function DemoPage() {
                         onKeyDown={(event) => handleKeyDown(event, index)}
                         onMouseEnter={() => setHovered(cellCoordinate)}
                         role="gridcell"
-                        style={{ "--cell-delay": `${80 + (rowIndex + columnIndex) * 18}ms` } as CSSProperties}
+                        style={{
+                          "--cell-delay": `${80 + (rowIndex + columnIndex) * 18}ms`,
+                          ...(cell.mine && explodedIndex >= 0
+                            ? { "--pop-delay": `${Math.max(Math.abs(rowIndex - Math.floor(explodedIndex / game.preset.columns)), Math.abs(columnIndex - (explodedIndex % game.preset.columns))) * 70}ms` }
+                            : {}),
+                        } as CSSProperties}
                         type="button"
                       >
                         {cell.exploded ? <><MineMark /><span className="play-explosion" aria-hidden="true">{blastPixels.map(([x, y, size, color], pixelIndex) => <i key={pixelIndex} style={{ "--blast-color": color, "--blast-size": `${size}px`, "--blast-x": `${x}px`, "--blast-y": `${y}px` } as CSSProperties} />)}</span></> : null}
@@ -203,6 +226,24 @@ export default function DemoPage() {
                     );
                   })}
                 </div>
+
+                {game.status === "won" ? (
+                  <span aria-hidden="true" className="board-confetti">
+                    {confetti.map((piece, pieceIndex) => (
+                      <i
+                        key={pieceIndex}
+                        style={{
+                          "--confetti-color": piece.color,
+                          "--confetti-delay": `${piece.delay}ms`,
+                          "--confetti-drift": `${piece.drift}px`,
+                          "--confetti-duration": `${piece.duration}ms`,
+                          "--confetti-size": `${piece.size}px`,
+                          "--confetti-x": `${piece.x}%`,
+                        } as CSSProperties}
+                      />
+                    ))}
+                  </span>
+                ) : null}
 
                 {locked ? (
                   <div className="board-lock" role="status">
