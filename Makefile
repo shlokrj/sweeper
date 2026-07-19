@@ -11,7 +11,7 @@ EVALUATION_SEED_START ?= 20000
 REPORT ?= artifacts/benchmark.json
 CALIBRATION_REPORT ?= artifacts/calibration.json
 
-.PHONY: install install-train format lint test check generate-data train benchmark calibrate
+.PHONY: install install-train format lint test check generate-data train benchmark calibrate serve-model
 
 install:
 	$(PYTHON) -m pip install -e ".[dev]"
@@ -41,3 +41,6 @@ benchmark:
 
 calibrate:
 	$(PYTHON) -m sweeper.models.evaluate --dataset $(DATASET) --checkpoint $(CHECKPOINT) --output $(CALIBRATION_REPORT)
+
+serve-model:
+	$(PYTHON) -m sweeper.service
