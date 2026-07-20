@@ -63,6 +63,7 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.match(demo, /Auto play speed/);
   assert.match(demo, /autoSpeeds/);
   assert.match(demo, /overdrive/);
+  assert.doesNotMatch(demo, /overdrive engaged/);
   assert.match(demo, /PRESETS\[presetId\]/);
   assert.match(demo, /board-lock/);
   assert.match(demo, /run auto/);
@@ -71,6 +72,9 @@ test("the navigation, playable demo, and benchmark routes remain available", asy
   assert.match(demo, /board-confetti/);
   assert.doesNotMatch(styles, /\.flag-toggle/);
   assert.match(styles, /\.auto-speed-stops/);
+  assert.match(styles, /--indigo/);
+  assert.match(styles, /--purple/);
+  assert.doesNotMatch(styles, /overdrive-blink/);
   assert.doesNotMatch(styles, /\.deployment-policy/);
   assert.doesNotMatch(styles, /\.demo-service-status/);
   assert.match(styles, /overdrive-rail/);
