@@ -16,6 +16,9 @@
   --green-deep: #5e8f64;
   --blue: #84b3cf;
   --blue-deep: #568cae;
+  --indigo: #6d75b5;
+  --purple: #9a78b6;
+  --purple-deep: #74528f;
   --yellow: #e6c472;
   --orange: #e8ad7c;
   --orange-deep: #ca8553;
@@ -55,7 +58,6 @@ button { font: inherit; }
 @keyframes overdrive-spark { 0% { opacity: 0; transform: translateX(0) scale(0.4); } 20%, 78% { opacity: 1; } 100% { opacity: 0; transform: translateX(46px) scale(1.15); } }
 @keyframes overdrive-word { 0% { transform: translateY(4px) scale(0.78); } 65% { transform: translateY(-1px) scale(1.06); } 100% { transform: none; } }
 @keyframes overdrive-sheen { from { background-position: 0% 0; } to { background-position: 200% 0; } }
-@keyframes overdrive-blink { 0%, 100% { opacity: 1; } 55% { opacity: 0.4; } }
 @keyframes flag-plant { 0% { opacity: 0; transform: translateY(-5px) scale(0.55); } 100% { opacity: 1; transform: none; } }
 @keyframes overdrive-button { 0%, 100% { box-shadow: inset 0 0 0 rgba(255, 255, 255, 0); } 50% { box-shadow: inset 0 -3px 0 rgba(255, 255, 255, 0.3); } }
 
@@ -192,7 +194,7 @@ button { font: inherit; }
 .auto-speed-caption { color: var(--muted); }
 .auto-speed-rail { position: relative; display: block; height: 22px; }
 .auto-speed-rail::before { position: absolute; top: 7px; right: 0; left: 0; height: 8px; border-radius: 999px; background: linear-gradient(90deg, var(--green-deep) 0 var(--speed-fill), var(--line) var(--speed-fill) 100%); box-shadow: inset 0 1px 0 rgba(48, 43, 37, 0.16); content: ""; }
-.auto-speed-rail::after { position: absolute; top: 2px; left: 3%; width: 4px; height: 4px; background: var(--yellow); box-shadow: 9px 7px 0 var(--red), 19px -3px 0 var(--orange), 31px 4px 0 var(--yellow); content: ""; opacity: 0; pointer-events: none; }
+.auto-speed-rail::after { position: absolute; top: 2px; left: 3%; width: 4px; height: 4px; background: var(--blue); box-shadow: 9px 7px 0 var(--indigo), 19px -3px 0 var(--purple), 31px 4px 0 var(--blue-deep); content: ""; opacity: 0; pointer-events: none; }
 .auto-speed-rail input { position: relative; z-index: 2; width: 100%; height: 22px; margin: 0; appearance: none; background: transparent; cursor: pointer; }
 .auto-speed-rail input::-webkit-slider-runnable-track { height: 8px; background: transparent; }
 .auto-speed-rail input::-webkit-slider-thumb { width: 21px; height: 21px; margin-top: -6px; appearance: none; border: 0; border-radius: 50%; background: var(--green-deep); box-shadow: 0 2px 0 rgba(48, 43, 37, 0.18); }
@@ -207,21 +209,19 @@ button { font: inherit; }
 .auto-speed-stops span:first-child { text-align: left; }
 .auto-speed-stops span:last-child { text-align: right; }
 .auto-speed-stops .is-active { color: var(--green-deep); transform: translateY(-1px); }
-.auto-speed > p { margin: 10px 0 0; color: var(--orange-deep); font-size: 0.36rem; letter-spacing: 0.09em; text-align: center; }
-.auto-speed.is-overdrive .auto-speed-rail::before { background: repeating-linear-gradient(90deg, var(--red-deep) 0 8px, var(--red) 8px 14px, var(--orange) 14px 19px, var(--yellow) 19px 25px); animation: overdrive-rail 430ms steps(8, end) infinite; box-shadow: 0 0 0 3px rgba(202, 133, 83, 0.16), 0 0 15px rgba(190, 98, 95, 0.42); }
+.auto-speed.is-overdrive .auto-speed-rail::before { background: repeating-linear-gradient(90deg, var(--blue-deep) 0 8px, var(--blue) 8px 14px, var(--indigo) 14px 19px, var(--purple) 19px 25px); animation: overdrive-rail 430ms steps(8, end) infinite; box-shadow: 0 0 0 3px rgba(109, 117, 181, 0.2), 0 0 15px rgba(116, 82, 143, 0.46); }
 .auto-speed.is-overdrive .auto-speed-rail::after { animation: overdrive-spark 700ms steps(6, end) infinite; }
-.auto-speed.is-overdrive .auto-speed-rail input::-webkit-slider-thumb { background: var(--orange-deep); box-shadow: 0 0 0 4px rgba(230, 196, 114, 0.38), 0 2px 0 rgba(48, 43, 37, 0.18); }
-.auto-speed.is-overdrive .auto-speed-rail input::-moz-range-thumb { background: var(--orange-deep); box-shadow: 0 0 0 4px rgba(230, 196, 114, 0.38), 0 2px 0 rgba(48, 43, 37, 0.18); }
-.auto-speed.is-overdrive output { color: transparent; background: linear-gradient(90deg, var(--red-deep), var(--orange-deep), var(--yellow), var(--orange-deep), var(--red-deep)); background-size: 220% 100%; background-clip: text; -webkit-background-clip: text; animation: overdrive-word 480ms steps(5, end) both, overdrive-sheen 1.7s steps(12, end) infinite 480ms; }
-.auto-speed.is-overdrive .auto-speed-stops span:last-child { color: var(--orange-deep); }
-.auto-speed.is-overdrive > p { animation: overdrive-blink 1.5s steps(2, end) infinite; }
+.auto-speed.is-overdrive .auto-speed-rail input::-webkit-slider-thumb { background: linear-gradient(135deg, var(--blue-deep), var(--purple)); box-shadow: 0 0 0 4px rgba(109, 117, 181, 0.38), 0 2px 0 rgba(48, 43, 37, 0.18); }
+.auto-speed.is-overdrive .auto-speed-rail input::-moz-range-thumb { background: linear-gradient(135deg, var(--blue-deep), var(--purple)); box-shadow: 0 0 0 4px rgba(109, 117, 181, 0.38), 0 2px 0 rgba(48, 43, 37, 0.18); }
+.auto-speed.is-overdrive output { color: transparent; background: linear-gradient(90deg, var(--blue-deep), var(--indigo), var(--purple), var(--indigo), var(--blue-deep)); background-size: 220% 100%; background-clip: text; -webkit-background-clip: text; animation: overdrive-word 480ms steps(5, end) both, overdrive-sheen 1.7s steps(12, end) infinite 480ms; }
+.auto-speed.is-overdrive .auto-speed-stops span:last-child { color: var(--purple-deep); }
 .decision-actions { display: grid; grid-template-columns: 1.2fr 1fr; margin-top: 30px; border: 1px solid var(--line-dark); }
 .decision-actions-single { grid-template-columns: 1fr; }
 .decision-actions-single button:first-child { border-right: 0; }
 .decision-actions button { min-height: 46px; border: 0; background: transparent; color: var(--ink); cursor: pointer; font-size: 0.85rem; font-weight: 650; transition: background 130ms ease, color 130ms ease; }
 .decision-actions button:first-child { background: var(--ink); color: var(--paper); border-right: 1px solid var(--line-dark); }
 .decision-actions button:first-child:hover:not(:disabled) { background: var(--green-deep); }
-.decision-actions button:first-child.is-overdrive { background: var(--orange-deep); animation: overdrive-button 820ms steps(4, end) infinite; }
+.decision-actions button:first-child.is-overdrive { background: linear-gradient(90deg, var(--blue-deep), var(--indigo), var(--purple-deep)); animation: overdrive-button 820ms steps(4, end) infinite; }
 .decision-actions button:first-child:disabled { background: var(--line); color: var(--muted); cursor: default; }
 .decision-actions button:last-child:hover { background: rgba(230, 217, 200, 0.4); }
 .decision-actions button span { font-family: var(--font-pixel); font-size: 0.78rem; }

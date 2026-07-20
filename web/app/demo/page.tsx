@@ -331,7 +331,6 @@ export default function DemoPage() {
                   <span className={index === autoSpeedIndex ? "is-active" : ""} key={speed.id}>{speed.label}</span>
                 ))}
               </div>
-              {isOverdrive ? <p>overdrive engaged</p> : null}
             </div>
           ) : null}
           <div className="decision-evidence" key={`evidence-${game.id}-${mode}-${recommendation?.index ?? game.status}-${game.moves}`}>
